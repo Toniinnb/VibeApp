@@ -25,12 +25,10 @@
                         google: '#DB4437'
                     },
                     animation: { 
-                        'pop-in': 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
-                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards'
+                        'pop-in': 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'
                     },
                     keyframes: { 
-                        popIn: { '0%': { opacity: '0', transform: 'scale(0.8) translateY(-10px)' }, '100%': { opacity: '1', transform: 'scale(1) translateY(0)' } },
-                        fadeInUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
+                        popIn: { '0%': { opacity: '0', transform: 'scale(0.8) translateY(-10px)' }, '100%': { opacity: '1', transform: 'scale(1) translateY(0)' } }
                     }
                 }
             }
@@ -51,252 +49,183 @@
         .rugged-v { font-family: 'Black Ops One', cursive; font-size: 1.2em; vertical-align: middle; margin-right: -2px; display: inline-block; transform: scaleY(1.1); }
         #share-capture-area { position: fixed; top: -9999px; left: -9999px; width: 375px; min-height: 750px; background: radial-gradient(circle at top right, #4c1d95 0%, #0f172a 70%); z-index: 9999; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .ad-card-bg { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); border: 1px solid #4f46e5; }
-        .landing-hero { background: radial-gradient(circle at 50% 0%, #4c1d95 0%, #0f172a 70%); min-height: 100vh; }
-        .feature-icon { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 16px; font-size: 24px; margin-bottom: 16px; }
     </style>
 </head>
 <body>
 
-<div id="app" class="min-h-screen flex flex-col relative" :class="{'login-bg': isAuthView, 'bg-dark': !isAuthView && currentView !== 'landing'}">
+<div id="app" class="min-h-screen flex flex-col relative" :class="{'login-bg': currentView === 'login', 'bg-dark': currentView !== 'login'}">
     
-    <div v-if="currentView === 'landing'" class="landing-hero overflow-y-auto">
-        <nav class="flex justify-between items-center px-6 py-6 max-w-6xl mx-auto w-full">
-            <h1 class="text-2xl font-black italic tracking-tighter logo-glow flex items-end"><span class="rugged-v text-3xl">V</span>IBE<span class="text-primary">.</span></h1>
-            <button @click="currentView = 'login'" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-2 rounded-full font-bold text-sm transition backdrop-blur-md">Log In</button>
-        </nav>
+    <div v-if="checkingSession" class="flex-1 flex flex-col items-center justify-center bg-dark z-50">
+        <h1 class="text-4xl font-black italic tracking-tighter logo-glow mb-4 animate-pulse"><span class="rugged-v text-5xl">V</span>IBE<span class="text-primary">.</span></h1>
+        <i class="fas fa-circle-notch fa-spin text-primary text-2xl"></i>
+    </div>
 
-        <div class="flex flex-col items-center text-center px-6 pt-10 pb-20 max-w-4xl mx-auto">
-            <div class="inline-block px-4 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-400 text-xs font-bold uppercase tracking-widest mb-6 animate-fade-in-up">v5.0 Final Fix</div>
-            <h1 class="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-tight animate-fade-in-up" style="animation-delay: 0.1s;">
-                Swipe Your Way <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">To Profit.</span>
-            </h1>
-            <p class="text-gray-400 text-lg md:text-xl max-w-2xl mb-10 leading-relaxed animate-fade-in-up" style="animation-delay: 0.2s;">
-                The first sentiment-based stock analysis tool. Join thousands of active traders identifying the next NVDA or TSLA before the market moves.
-            </p>
-            <button @click="currentView = 'login'" class="group relative px-8 py-4 bg-white text-black font-black text-lg rounded-full overflow-hidden shadow-[0_0_40px_-10px_rgba(255,255,255,0.5)] transition hover:scale-105 animate-fade-in-up" style="animation-delay: 0.3s;">
-                <span class="relative z-10 flex items-center">Start Trading Free <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition"></i></span>
+    <div v-else-if="currentView === 'login'" class="flex-1 flex flex-col justify-center px-8 text-center animate-pop-in overflow-y-auto">
+        <div class="mb-10 mt-10">
+            <h1 class="text-7xl font-black italic tracking-tighter logo-glow mb-2 flex justify-center items-end"><span class="rugged-v text-8xl text-white">V</span>IBE<span class="text-primary">.</span></h1>
+            <p class="text-gray-400 text-lg font-medium tracking-wide">Login to continue.</p>
+        </div>
+        <div class="space-y-4 bg-card/40 p-6 rounded-3xl backdrop-blur-md border border-white/10 shadow-2xl">
+            <button @click="handleGoogleLogin" class="w-full bg-white text-black font-bold py-3.5 rounded-xl flex items-center justify-center gap-3 transition hover:bg-gray-200 active:scale-95">
+                <i class="fab fa-google text-lg text-google"></i> Continue with Google
             </button>
-
-            <div class="mt-16 relative w-full max-w-sm mx-auto animate-fade-in-up" style="animation-delay: 0.4s;">
-                <div class="absolute inset-0 bg-primary/30 blur-3xl rounded-full opacity-50"></div>
-                <div class="relative bg-card border border-gray-700 rounded-3xl p-4 shadow-2xl rotate-3 hover:rotate-0 transition duration-500">
-                    <div class="bg-dark rounded-xl p-6 flex flex-col gap-4">
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-gray-600"></div><div class="h-3 w-20 bg-gray-700 rounded"></div></div>
-                            <div class="h-6 w-12 bg-bullish/20 rounded text-bullish text-xs flex items-center justify-center font-bold">BUY</div>
-                        </div>
-                        <div class="text-center py-6">
-                            <div class="text-5xl font-black">NVDA</div>
-                            <div class="text-gray-400">$148.50</div>
-                        </div>
-                        <div class="flex justify-between px-4">
-                            <div class="w-12 h-12 rounded-full border-2 border-bearish text-bearish flex items-center justify-center"><i class="fas fa-times"></i></div>
-                            <div class="w-12 h-12 rounded-full border-2 border-bullish text-bullish flex items-center justify-center"><i class="fas fa-heart"></i></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div class="relative py-2"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-600"></div></div><div class="relative flex justify-center text-xs uppercase"><span class="bg-transparent px-2 text-gray-400 font-bold backdrop-blur-sm">Or with Email</span></div></div>
+            <input v-model="email" type="email" placeholder="Email address" class="w-full bg-dark/60 border border-gray-600 rounded-xl p-4 text-white outline-none focus:border-primary transition">
+            <input v-model="password" type="password" placeholder="Password (min 6 chars)" class="w-full bg-dark/60 border border-gray-600 rounded-xl p-4 text-white outline-none focus:border-primary transition" @keyup.enter="handleUnifiedAuth">
+            <button @click="handleUnifiedAuth" :disabled="loading" class="w-full bg-primary hover:bg-violet-600 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-primary/20 flex justify-center items-center mt-2 active:scale-95">
+                <span v-if="loading"><i class="fas fa-circle-notch fa-spin mr-2"></i> Connecting...</span><span v-else>Continue <i class="fas fa-arrow-right ml-2"></i></span>
+            </button>
         </div>
-
-        <div class="bg-dark/50 backdrop-blur-lg border-t border-white/5 py-20 px-6">
-            <div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
-                <div class="bg-card/30 p-8 rounded-3xl border border-white/5 hover:border-primary/50 transition">
-                    <div class="feature-icon bg-blue-500/20 text-blue-400"><i class="fas fa-bolt"></i></div>
-                    <h3 class="text-xl font-bold mb-2">Real-time Signals</h3>
-                    <p class="text-gray-400 text-sm">Instant crowd sentiment data on top tickers. Don't trade alone.</p>
-                </div>
-                <div class="bg-card/30 p-8 rounded-3xl border border-white/5 hover:border-primary/50 transition">
-                    <div class="feature-icon bg-purple-500/20 text-purple-400"><i class="fas fa-gamepad"></i></div>
-                    <h3 class="text-xl font-bold mb-2">Gamified Research</h3>
-                    <p class="text-gray-400 text-sm">Swipe left or right. Market analysis has never been this addictive.</p>
-                </div>
-                <div class="bg-card/30 p-8 rounded-3xl border border-white/5 hover:border-primary/50 transition">
-                    <div class="feature-icon bg-green-500/20 text-green-400"><i class="fas fa-chart-line"></i></div>
-                    <h3 class="text-xl font-bold mb-2">Broker Integration</h3>
-                    <p class="text-gray-400 text-sm">Connect directly with top brokers like MooMoo & Webull to execute trades.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="border-t border-white/5 py-10 text-center text-gray-500 text-xs">
-            <p class="mb-2">&copy; 2025 Vibe Market Analysis. All rights reserved.</p>
-            <p>Disclaimer: Vibe is for informational purposes only and does not constitute financial advice.</p>
-        </div>
+        <p class="text-[10px] text-gray-500 mt-8 mb-4">New account? We'll create one automatically.</p>
     </div>
 
-    <div v-else class="flex-1 flex flex-col max-w-md mx-auto w-full relative overflow-hidden h-[100dvh]">
-        
-        <div v-if="checkingSession" class="flex-1 flex flex-col items-center justify-center bg-dark z-50">
-            <h1 class="text-4xl font-black italic tracking-tighter logo-glow mb-4 animate-pulse"><span class="rugged-v text-5xl">V</span>IBE<span class="text-primary">.</span></h1>
-            <i class="fas fa-circle-notch fa-spin text-primary text-2xl"></i>
+    <template v-else>
+        <div class="flex justify-between items-center px-6 py-5 z-10 bg-dark/90 backdrop-blur-sm">
+            <button @click="currentView = 'leaderboard'" class="text-gray-400 hover:text-white transition text-left font-black italic tracking-tight text-sm active:scale-95 border-b border-transparent hover:border-white">HOT LIST</button>
+            <h1 class="text-3xl font-black tracking-tighter cursor-pointer logo-glow italic flex items-end" @click="currentView = 'swipe'"><span class="rugged-v text-4xl">V</span>IBE<span class="text-primary">.</span></h1>
+            <button @click="currentView = 'profile'" class="w-10 h-10 rounded-full bg-gray-700 border border-gray-500 overflow-hidden shadow-md active:scale-90 transition relative">
+                <img :src="currentAvatarUrl" class="w-full h-full object-cover bg-white" crossorigin="anonymous">
+            </button>
         </div>
 
-        <div v-else-if="currentView === 'login'" class="flex-1 flex flex-col justify-center px-8 text-center animate-fade-in overflow-y-auto">
-            <button @click="currentView = 'landing'" class="absolute top-6 left-6 text-gray-400 hover:text-white"><i class="fas fa-arrow-left"></i> Home</button>
-            <div class="mb-10 mt-10">
-                <h1 class="text-7xl font-black italic tracking-tighter logo-glow mb-2 flex justify-center items-end"><span class="rugged-v text-8xl text-white">V</span>IBE<span class="text-primary">.</span></h1>
-                <p class="text-gray-400 text-lg font-medium tracking-wide">Login to continue.</p>
-            </div>
-            <div class="space-y-4 bg-card/40 p-6 rounded-3xl backdrop-blur-md border border-white/10 shadow-2xl">
-                <button @click="handleGoogleLogin" class="w-full bg-white text-black font-bold py-3.5 rounded-xl flex items-center justify-center gap-3 transition hover:bg-gray-200 active:scale-95">
-                    <i class="fab fa-google text-lg text-google"></i> Continue with Google
-                </button>
-                <div class="relative py-2"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-600"></div></div><div class="relative flex justify-center text-xs uppercase"><span class="bg-transparent px-2 text-gray-400 font-bold backdrop-blur-sm">Or with Email</span></div></div>
-                <input v-model="email" type="email" placeholder="Email address" class="w-full bg-dark/60 border border-gray-600 rounded-xl p-4 text-white outline-none focus:border-primary transition">
-                <input v-model="password" type="password" placeholder="Password (min 6 chars)" class="w-full bg-dark/60 border border-gray-600 rounded-xl p-4 text-white outline-none focus:border-primary transition" @keyup.enter="handleUnifiedAuth">
-                <button @click="handleUnifiedAuth" :disabled="loading" class="w-full bg-primary hover:bg-violet-600 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-primary/20 flex justify-center items-center mt-2 active:scale-95">
-                    <span v-if="loading"><i class="fas fa-circle-notch fa-spin mr-2"></i> Connecting...</span><span v-else>Continue <i class="fas fa-arrow-right ml-2"></i></span>
-                </button>
-            </div>
-            <p class="text-[10px] text-gray-500 mt-8 mb-4">New account? We'll create one automatically.</p>
-        </div>
-
-        <template v-else-if="currentView === 'swipe' || currentView === 'post' || currentView === 'leaderboard' || currentView === 'profile'">
-            <div class="flex justify-between items-center px-6 py-5 z-10 bg-dark/90 backdrop-blur-sm">
-                <button @click="currentView = 'leaderboard'" class="text-gray-400 hover:text-white transition text-left font-black italic tracking-tight text-sm active:scale-95 border-b border-transparent hover:border-white">HOT LIST</button>
-                <h1 class="text-3xl font-black tracking-tighter cursor-pointer logo-glow italic flex items-end" @click="currentView = 'swipe'"><span class="rugged-v text-4xl">V</span>IBE<span class="text-primary">.</span></h1>
-                <button @click="currentView = 'profile'" class="w-10 h-10 rounded-full bg-gray-700 border border-gray-500 overflow-hidden shadow-md active:scale-90 transition relative">
-                    <img :src="currentAvatarUrl" class="w-full h-full object-cover bg-white" crossorigin="anonymous">
-                </button>
-            </div>
-
-            <div v-if="currentView === 'swipe'" class="flex-1 flex flex-col justify-center px-4 relative pb-10">
-                <div class="card-stack">
-                    <div v-if="loading" class="flex items-center justify-center h-full text-primary animate-pulse"><i class="fas fa-circle-notch fa-spin text-3xl"></i></div>
-                    <div v-else-if="cards.length === 0" class="flex items-center justify-center h-full text-gray-500 text-center">
-                        <div><p class="text-6xl mb-4">🙌</p><h2 class="text-2xl font-bold text-white mb-2">All Caught Up!</h2><button @click="currentView = 'post'" class="mt-8 px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full text-white font-black shadow-lg hover:scale-105 transition transform">POST YOUR VIBE <i class="fas fa-plus ml-2"></i></button></div>
-                    </div>
+        <div v-if="currentView === 'swipe'" class="flex-1 flex flex-col justify-center px-4 relative pb-10">
+            <div class="card-stack">
+                <div v-if="loading" class="flex items-center justify-center h-full text-primary animate-pulse"><i class="fas fa-circle-notch fa-spin text-3xl"></i></div>
+                <div v-else-if="cards.length === 0" class="flex items-center justify-center h-full text-gray-500 text-center">
+                    <div><p class="text-6xl mb-4">🙌</p><h2 class="text-2xl font-bold text-white mb-2">All Caught Up!</h2><button @click="currentView = 'post'" class="mt-8 px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full text-white font-black shadow-lg hover:scale-105 transition transform">POST YOUR VIBE <i class="fas fa-plus ml-2"></i></button></div>
+                </div>
+                
+                <div v-for="(card, index) in displayedCards" :key="card.id" 
+                     class="trade-card p-6" 
+                     :class="{'ad-card-bg': card.isAd}"
+                     :style="{ zIndex: cards.length - index, transform: index === 0 ? currentTransform : 'scale(0.95) translateY(10px)' }" 
+                     @touchstart="startDrag" @touchmove="onDrag" @touchend="endDrag" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @mouseleave="endDrag">
                     
-                    <div v-for="(card, index) in displayedCards" :key="card.id" 
-                         class="trade-card p-6" 
-                         :class="{'ad-card-bg': card.isAd}"
-                         :style="{ zIndex: cards.length - index, transform: index === 0 ? currentTransform : 'scale(0.95) translateY(10px)' }" 
-                         @touchstart="startDrag" @touchmove="onDrag" @touchend="endDrag" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @mouseleave="endDrag">
-                        
-                        <div v-if="card.isAd" class="h-full flex flex-col justify-between text-center relative z-10">
-                            <div class="flex justify-between items-center text-xs font-bold text-blue-300 uppercase tracking-widest">
-                                <span>Sponsored</span>
-                                <span>Promoted</span>
+                    <div v-if="card.isAd" class="h-full flex flex-col justify-between text-center relative z-10">
+                        <div class="flex justify-between items-center text-xs font-bold text-blue-300 uppercase tracking-widest">
+                            <span>Sponsored</span>
+                            <span>Promoted</span>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-center items-center pointer-events-none">
+                            <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg animate-pulse">
+                                <i class="fas fa-gift text-4xl text-blue-900"></i>
                             </div>
-                            <div class="flex-1 flex flex-col justify-center items-center pointer-events-none">
-                                <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg animate-pulse">
-                                    <i class="fas fa-gift text-4xl text-blue-900"></i>
-                                </div>
-                                <h2 class="text-3xl font-black italic tracking-tighter text-white mb-2">{{ card.ticker }}</h2>
-                                <p class="text-blue-100 font-bold text-lg px-4 leading-tight">{{ card.title }}</p>
-                                <div class="mt-6 bg-white text-blue-900 px-6 py-3 rounded-full font-black text-sm shadow-xl transform scale-110">
-                                    CLAIM NOW <i class="fas fa-arrow-right ml-1"></i>
-                                </div>
+                            <h2 class="text-3xl font-black italic tracking-tighter text-white mb-2">{{ card.ticker }}</h2>
+                            <p class="text-blue-100 font-bold text-lg px-4 leading-tight">{{ card.title }}</p>
+                            <div class="mt-6 bg-white text-blue-900 px-6 py-3 rounded-full font-black text-sm shadow-xl transform scale-110">
+                                CLAIM NOW <i class="fas fa-arrow-right ml-1"></i>
                             </div>
-                            <div class="text-[10px] text-blue-400/50 uppercase tracking-widest">Swipe Left or Right to Claim</div>
                         </div>
-
-                        <template v-else>
-                            <div class="flex justify-between items-start">
-                                <div class="flex items-center"><img :src="card.profiles?.avatar_url || getAvatar(card.profiles?.username || card.user_id)" class="w-10 h-10 rounded-full border border-gray-700 bg-white object-cover" crossorigin="anonymous"><div class="ml-3 text-left"><p class="font-bold text-sm tracking-tight text-gray-300">{{ card.profiles?.username || 'Trader #' + card.user_id.substring(0,4) }}</p><p class="text-[10px] text-gray-400 font-bold uppercase"><i class="far fa-calendar-alt mr-1"></i>{{ formatDate(card.trade_date) }}</p></div></div>
-                                <div class="flex gap-2"><button @click.stop="shareCard(card)" class="w-8 h-8 rounded-full bg-gray-700/50 flex items-center justify-center text-gray-300 hover:text-white hover:bg-primary transition"><i class="fas fa-share-square text-xs"></i></button><div class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center" :class="card.type === 'BUY' ? 'bg-bullish/10 text-bullish' : 'bg-bearish/10 text-bearish'">{{ card.type }}</div></div>
-                            </div>
-                            <div class="text-center my-4 select-none flex-1 flex flex-col justify-center"><h2 class="text-7xl font-black tracking-tighter mb-2 text-white">{{ card.ticker }}</h2><div class="text-3xl font-bold text-gray-400">${{ card.price }}</div><div class="text-sm text-gray-500 font-medium mt-1">{{ card.shares }} shares • ${{ (card.price * card.shares).toLocaleString() }}</div><div class="mt-4"><span v-if="card.verified" class="inline-flex items-center gap-1 px-3 py-1 bg-bullish/10 text-bullish text-xs font-bold rounded-full border border-bullish/30"><i class="fas fa-check-circle"></i> VERIFIED</span><span v-else class="inline-flex items-center gap-1 px-3 py-1 bg-warning/10 text-warning text-xs font-bold rounded-full border border-warning/30"><i class="fas fa-exclamation-triangle"></i> MISMATCH</span></div></div>
-                        </template>
-
-                        <div v-if="index === 0 && swipeStatus === 'LIKE'" class="absolute top-20 left-8 border-4 border-bullish text-bullish font-black text-5xl px-4 py-2 rounded-xl -rotate-12 opacity-80 uppercase tracking-tighter">{{ card.isAd ? 'CLAIM' : 'BULL' }}</div>
-                        <div v-if="index === 0 && swipeStatus === 'NOPE'" class="absolute top-20 right-8 border-4 border-bearish text-bearish font-black text-5xl px-4 py-2 rounded-xl rotate-12 opacity-80 uppercase tracking-tighter">{{ card.isAd ? 'CLAIM' : 'BEAR' }}</div>
+                        <div class="text-[10px] text-blue-400/50 uppercase tracking-widest">Swipe Left or Right to Claim</div>
                     </div>
-                </div>
-                <div v-if="cards.length > 0" class="flex justify-between items-center px-12 mt-6"><button @click="swipe('left')" class="w-16 h-16 rounded-full bg-gray-800 text-bearish text-2xl border border-gray-700 shadow-xl flex items-center justify-center active:scale-90 transition"><i class="fas fa-times"></i></button><button @click="currentView = 'post'" class="w-14 h-14 rounded-full bg-gray-700 text-white text-xl border border-gray-600 shadow-lg flex items-center justify-center active:scale-90 transition"><i class="fas fa-plus"></i></button><button @click="swipe('right')" class="w-16 h-16 rounded-full bg-gray-800 text-bullish text-2xl border border-gray-700 shadow-xl flex items-center justify-center active:scale-90 transition"><i class="fas fa-heart"></i></button></div>
-            </div>
 
-            <div v-if="currentView === 'post'" class="flex-1 p-6 overflow-y-auto bg-dark">
-                <h2 class="text-2xl font-black mb-6 tracking-tight">Post Your Vibe</h2>
-                <div class="space-y-5">
-                    <div class="relative z-50"><label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Ticker</label><div class="relative"><input v-model="tickerInput" @input="filterStocks" @focus="showSuggestions = true" type="text" placeholder="e.g. NVDA" class="w-full bg-card p-5 pl-5 rounded-2xl text-3xl font-black uppercase border border-gray-700 focus:border-primary outline-none transition placeholder-gray-600 text-white shadow-lg"><ul v-if="showSuggestions && filteredStocks.length > 0" class="absolute w-full bg-gray-800 border border-gray-700 rounded-xl mt-2 max-h-48 overflow-y-auto shadow-2xl z-50"><li v-for="stock in filteredStocks" :key="stock" @click="selectStock(stock)" class="p-4 hover:bg-gray-700 cursor-pointer border-b border-gray-700/50 flex justify-between"><span class="font-bold text-white">{{ stock }}</span></li></ul></div></div>
-                    <div><label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Trade Date</label><div class="relative flex items-center bg-card rounded-2xl border border-gray-700 focus-within:border-primary transition shadow-md overflow-hidden"><div class="pl-5 text-gray-400 text-xl pointer-events-none"><i class="far fa-calendar-alt"></i></div><input v-model="newTrade.date" type="date" class="w-full bg-transparent p-5 text-xl font-bold outline-none text-white placeholder-gray-500 font-sans" required></div></div>
-                    <div class="flex gap-4"><div class="flex-1"><label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Price</label><div class="relative flex items-center bg-card rounded-2xl border border-gray-700 focus-within:border-primary transition shadow-md"><span class="pl-5 text-gray-400 text-lg font-bold">$</span><input v-model="newTrade.price" type="number" step="0.01" placeholder="0.00" class="w-full bg-transparent p-5 pl-2 text-xl font-bold outline-none text-white"></div></div><div class="flex-1"><label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Shares</label><div class="relative bg-card rounded-2xl border border-gray-700 focus-within:border-primary transition shadow-md"><input v-model="newTrade.shares" type="number" placeholder="1" class="w-full bg-transparent p-5 text-xl font-bold outline-none text-white"></div></div></div>
-                    <div><label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Vibe</label><div class="relative"><select v-model="newTrade.type" class="w-full bg-card p-5 rounded-2xl text-xl font-bold border border-gray-700 focus:border-primary outline-none appearance-none text-white shadow-md"><option value="BUY">BUY 🚀 (Bullish)</option><option value="SELL">SELL 💀 (Bearish)</option></select><div class="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"><i class="fas fa-chevron-down"></i></div></div></div>
-                    <div v-if="validating" class="text-center py-4 bg-gray-800/50 rounded-xl border border-gray-700/50"><i class="fas fa-sync fa-spin text-primary mr-2"></i> <span class="text-gray-400 text-sm">Verifying with market data...</span></div>
-                    <div class="pt-2"><button @click="submitTrade" :disabled="submitting || validating" class="w-full py-5 bg-gradient-to-r from-primary to-violet-600 hover:from-violet-500 hover:to-violet-700 rounded-2xl font-black text-lg shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition transform active:scale-95 text-white tracking-wide">{{ submitting ? 'POSTING...' : 'SEND IT 🚀' }}</button><button @click="currentView = 'swipe'" class="w-full py-4 text-gray-500 font-bold text-sm hover:text-white transition mt-2">Cancel</button></div>
+                    <template v-else>
+                        <div class="flex justify-between items-start">
+                            <div class="flex items-center"><img :src="card.profiles?.avatar_url || getAvatar(card.profiles?.username || card.user_id)" class="w-10 h-10 rounded-full border border-gray-700 bg-white object-cover" crossorigin="anonymous"><div class="ml-3 text-left"><p class="font-bold text-sm tracking-tight text-gray-300">{{ card.profiles?.username || 'Trader #' + card.user_id.substring(0,4) }}</p><p class="text-[10px] text-gray-400 font-bold uppercase"><i class="far fa-calendar-alt mr-1"></i>{{ formatDate(card.trade_date) }}</p></div></div>
+                            <div class="flex gap-2"><button @click.stop="shareCard(card)" class="w-8 h-8 rounded-full bg-gray-700/50 flex items-center justify-center text-gray-300 hover:text-white hover:bg-primary transition"><i class="fas fa-share-square text-xs"></i></button><div class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center" :class="card.type === 'BUY' ? 'bg-bullish/10 text-bullish' : 'bg-bearish/10 text-bearish'">{{ card.type }}</div></div>
+                        </div>
+                        <div class="text-center my-4 select-none flex-1 flex flex-col justify-center"><h2 class="text-7xl font-black tracking-tighter mb-2 text-white">{{ card.ticker }}</h2><div class="text-3xl font-bold text-gray-400">${{ card.price }}</div><div class="text-sm text-gray-500 font-medium mt-1">{{ card.shares }} shares • ${{ (card.price * card.shares).toLocaleString() }}</div><div class="mt-4"><span v-if="card.verified" class="inline-flex items-center gap-1 px-3 py-1 bg-bullish/10 text-bullish text-xs font-bold rounded-full border border-bullish/30"><i class="fas fa-check-circle"></i> VERIFIED</span><span v-else class="inline-flex items-center gap-1 px-3 py-1 bg-warning/10 text-warning text-xs font-bold rounded-full border border-warning/30"><i class="fas fa-exclamation-triangle"></i> MISMATCH</span></div></div>
+                    </template>
+
+                    <div v-if="index === 0 && swipeStatus === 'LIKE'" class="absolute top-20 left-8 border-4 border-bullish text-bullish font-black text-5xl px-4 py-2 rounded-xl -rotate-12 opacity-80 uppercase tracking-tighter">{{ card.isAd ? 'CLAIM' : 'BULL' }}</div>
+                    <div v-if="index === 0 && swipeStatus === 'NOPE'" class="absolute top-20 right-8 border-4 border-bearish text-bearish font-black text-5xl px-4 py-2 rounded-xl rotate-12 opacity-80 uppercase tracking-tighter">{{ card.isAd ? 'CLAIM' : 'BEAR' }}</div>
                 </div>
             </div>
+            <div v-if="cards.length > 0" class="flex justify-between items-center px-12 mt-6"><button @click="swipe('left')" class="w-16 h-16 rounded-full bg-gray-800 text-bearish text-2xl border border-gray-700 shadow-xl flex items-center justify-center active:scale-90 transition"><i class="fas fa-times"></i></button><button @click="currentView = 'post'" class="w-14 h-14 rounded-full bg-gray-700 text-white text-xl border border-gray-600 shadow-lg flex items-center justify-center active:scale-90 transition"><i class="fas fa-plus"></i></button><button @click="swipe('right')" class="w-16 h-16 rounded-full bg-gray-800 text-bullish text-2xl border border-gray-700 shadow-xl flex items-center justify-center active:scale-90 transition"><i class="fas fa-heart"></i></button></div>
+        </div>
 
-            <div v-if="currentView === 'leaderboard'" class="flex-1 p-4 overflow-hidden flex flex-col">
-                <div class="flex justify-between items-end mb-6 px-2 mt-2">
-                    <div class="flex gap-6">
-                        <button @click="leaderboardTab = 'hot'" :class="leaderboardTab === 'hot' ? 'text-white border-b-2 border-primary scale-105' : 'text-gray-600 hover:text-gray-400'" class="text-xl font-black italic uppercase tracking-tighter transition-all duration-300 pb-1">Diamond Hands</button>
-                        <button @click="leaderboardTab = 'cold'" :class="leaderboardTab === 'cold' ? 'text-white border-b-2 border-primary scale-105' : 'text-gray-600 hover:text-gray-400'" class="text-xl font-black italic uppercase tracking-tighter transition-all duration-300 pb-1">Paper Hands</button>
-                    </div>
-                    <button @click="shareLeaderboard" class="text-gray-500 hover:text-white transition text-xs font-bold uppercase tracking-widest border border-gray-700 rounded px-2 py-1">SHARE</button>
-                </div>
-                <div class="flex-1 overflow-y-auto hide-scrollbar space-y-3 pb-20">
-                    <div v-if="loading" class="text-center pt-10 text-primary"><i class="fas fa-circle-notch fa-spin text-2xl"></i></div>
-                    <div v-else-if="(leaderboardTab === 'hot' ? topVibes : coldVibes).length === 0" class="text-center pt-10 text-gray-500"><p>No data yet.</p></div>
-                    <div v-for="(trade, idx) in (leaderboardTab === 'hot' ? topVibes : coldVibes)" :key="trade.id" class="bg-card/50 p-4 rounded-xl flex items-center border-b border-gray-800">
-                        <div class="text-xl font-black w-8 italic" :class="idx < 3 ? (leaderboardTab === 'hot' ? 'text-yellow-500' : 'text-gray-500') : 'text-gray-700'">{{ idx + 1 }}</div>
-                        <div class="flex-1 ml-2">
-                            <div class="flex items-center gap-2"><span class="font-bold text-white tracking-tight">{{ trade.ticker }}</span><span class="text-xs text-gray-500">by {{ trade.username || 'Anon' }}</span></div>
-                            <div class="text-[10px] text-gray-500 font-bold mt-1 uppercase tracking-wide">{{ leaderboardTab === 'hot' ? 'Bullish Ratio' : 'Paper Hands Ratio' }}: {{ leaderboardTab === 'hot' ? calculateRatio(trade) : (100 - calculateRatio(trade)) }}%</div>
-                        </div>
-                        <div class="text-right">
-                            <div v-if="leaderboardTab === 'hot'" class="text-bullish font-black text-xl">{{ trade.likes }} <span class="text-[10px] text-gray-500 font-bold uppercase ml-1">Likes</span></div>
-                            <div v-else class="text-bearish font-black text-xl">{{ trade.dislikes }} <span class="text-[10px] text-gray-500 font-bold uppercase ml-1">Rejects</span></div>
-                        </div>
-                    </div>
-                </div>
-                <button @click="currentView = 'swipe'" class="w-full py-4 text-gray-500 font-bold text-sm mt-2 hover:text-white transition">Back to Swipe</button>
+        <div v-if="currentView === 'post'" class="flex-1 p-6 overflow-y-auto bg-dark">
+            <h2 class="text-2xl font-black mb-6 tracking-tight">Post Your Vibe</h2>
+            <div class="space-y-5">
+                <div class="relative z-50"><label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Ticker</label><div class="relative"><input v-model="tickerInput" @input="filterStocks" @focus="showSuggestions = true" type="text" placeholder="e.g. NVDA" class="w-full bg-card p-5 pl-5 rounded-2xl text-3xl font-black uppercase border border-gray-700 focus:border-primary outline-none transition placeholder-gray-600 text-white shadow-lg"><ul v-if="showSuggestions && filteredStocks.length > 0" class="absolute w-full bg-gray-800 border border-gray-700 rounded-xl mt-2 max-h-48 overflow-y-auto shadow-2xl z-50"><li v-for="stock in filteredStocks" :key="stock" @click="selectStock(stock)" class="p-4 hover:bg-gray-700 cursor-pointer border-b border-gray-700/50 flex justify-between"><span class="font-bold text-white">{{ stock }}</span></li></ul></div></div>
+                <div><label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Trade Date</label><div class="relative flex items-center bg-card rounded-2xl border border-gray-700 focus-within:border-primary transition shadow-md overflow-hidden"><div class="pl-5 text-gray-400 text-xl pointer-events-none"><i class="far fa-calendar-alt"></i></div><input v-model="newTrade.date" type="date" class="w-full bg-transparent p-5 text-xl font-bold outline-none text-white placeholder-gray-500 font-sans" required></div></div>
+                <div class="flex gap-4"><div class="flex-1"><label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Price</label><div class="relative flex items-center bg-card rounded-2xl border border-gray-700 focus-within:border-primary transition shadow-md"><span class="pl-5 text-gray-400 text-lg font-bold">$</span><input v-model="newTrade.price" type="number" step="0.01" placeholder="0.00" class="w-full bg-transparent p-5 pl-2 text-xl font-bold outline-none text-white"></div></div><div class="flex-1"><label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Shares</label><div class="relative bg-card rounded-2xl border border-gray-700 focus-within:border-primary transition shadow-md"><input v-model="newTrade.shares" type="number" placeholder="1" class="w-full bg-transparent p-5 text-xl font-bold outline-none text-white"></div></div></div>
+                <div><label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Vibe</label><div class="relative"><select v-model="newTrade.type" class="w-full bg-card p-5 rounded-2xl text-xl font-bold border border-gray-700 focus:border-primary outline-none appearance-none text-white shadow-md"><option value="BUY">BUY 🚀 (Bullish)</option><option value="SELL">SELL 💀 (Bearish)</option></select><div class="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"><i class="fas fa-chevron-down"></i></div></div></div>
+                <div v-if="validating" class="text-center py-4 bg-gray-800/50 rounded-xl border border-gray-700/50"><i class="fas fa-sync fa-spin text-primary mr-2"></i> <span class="text-gray-400 text-sm">Verifying with market data...</span></div>
+                <div class="pt-2"><button @click="submitTrade" :disabled="submitting || validating" class="w-full py-5 bg-gradient-to-r from-primary to-violet-600 hover:from-violet-500 hover:to-violet-700 rounded-2xl font-black text-lg shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition transform active:scale-95 text-white tracking-wide">{{ submitting ? 'POSTING...' : 'SEND IT 🚀' }}</button><button @click="currentView = 'swipe'" class="w-full py-4 text-gray-500 font-bold text-sm hover:text-white transition mt-2">Cancel</button></div>
             </div>
+        </div>
 
-            <div v-if="currentView === 'profile'" class="flex-1 flex flex-col bg-dark overflow-hidden">
-                <div class="flex-1 p-6 overflow-y-auto">
-                    <div class="text-center mb-8">
-                        <div class="relative w-32 h-32 mx-auto mb-6 cursor-pointer group" @click="showAvatarMenu = !showAvatarMenu">
-                            <img :src="currentAvatarUrl" class="w-full h-full rounded-full border-4 border-card shadow-xl bg-white object-cover group-hover:border-primary transition duration-300" crossorigin="anonymous">
-                            <div class="absolute bottom-0 right-0 bg-primary p-2.5 rounded-full shadow-lg z-10"><i :class="showAvatarMenu ? 'fas fa-times' : 'fas fa-camera'" class="text-white text-sm"></i></div>
-                            <div v-if="uploadingAvatar" class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center"><i class="fas fa-circle-notch fa-spin text-white text-xl"></i></div>
-                        </div>
-                        <div v-if="showAvatarMenu" class="flex justify-center gap-6 mb-8 animate-pop-in">
-                            <button @click="setPresetAvatar(MALE_AVATAR)" class="flex flex-col items-center gap-1 group"><div class="w-16 h-16 rounded-full border-2 border-gray-600 bg-gray-800 group-hover:border-primary group-hover:scale-105 transition overflow-hidden shadow-lg"><img :src="MALE_AVATAR" class="w-full h-full object-cover" crossorigin="anonymous"></div><span class="text-[10px] text-gray-400 font-bold uppercase group-hover:text-primary transition">Male</span></button>
-                            <button @click="setPresetAvatar(FEMALE_AVATAR)" class="flex flex-col items-center gap-1 group"><div class="w-16 h-16 rounded-full border-2 border-gray-600 bg-gray-800 group-hover:border-primary group-hover:scale-105 transition overflow-hidden shadow-lg"><img :src="FEMALE_AVATAR" class="w-full h-full object-cover" crossorigin="anonymous"></div><span class="text-[10px] text-gray-400 font-bold uppercase group-hover:text-primary transition">Female</span></button>
-                            <button @click="triggerFileUpload" class="flex flex-col items-center gap-1 group"><div class="w-16 h-16 rounded-full border-2 border-gray-600 bg-gray-800 group-hover:border-primary group-hover:scale-105 transition flex items-center justify-center text-gray-400 group-hover:text-white shadow-lg"><i class="fas fa-upload text-2xl"></i></div><span class="text-[10px] text-gray-400 font-bold uppercase group-hover:text-primary transition">Upload</span></button>
-                            <input type="file" ref="fileInput" @change="handleFileUpload" accept="image/*" class="hidden-input">
-                        </div>
-                        <div class="flex items-center justify-center gap-2 mb-2">
-                            <input v-if="editingName" v-model="editUsernameInput" type="text" class="bg-card border border-gray-600 rounded px-2 py-1 text-center font-bold text-lg outline-none focus:border-primary" placeholder="Enter username">
-                            <h2 v-else class="text-2xl font-black">{{ userProfile.username || 'Trader' }}</h2>
-                            <button @click="toggleEditName" class="text-gray-400 hover:text-white text-sm"><i :class="editingName ? 'fas fa-check text-green-400' : 'fas fa-edit'"></i></button>
-                        </div>
-                        <p class="text-gray-500 text-sm truncate px-10">{{ user.email }}</p>
-                        <div class="mt-6 flex justify-center gap-3 text-sm">
-                            <div class="bg-card px-5 py-3 rounded-2xl border border-gray-700 flex-1"><span class="block font-black text-2xl text-white">{{ myHistory.length }}</span> <span class="text-gray-500 text-xs font-bold uppercase">Vibes</span></div>
-                            <button @click="shareProfile" class="bg-primary/10 hover:bg-primary/20 text-primary px-5 py-3 rounded-2xl border border-primary/30 transition active:scale-95 flex flex-col items-center justify-center gap-1"><i class="fas fa-share-alt text-xl"></i><span class="text-xs font-bold uppercase">Share Card</span></button>
-                        </div>
+        <div v-if="currentView === 'leaderboard'" class="flex-1 p-4 overflow-hidden flex flex-col">
+            <div class="flex justify-between items-end mb-6 px-2 mt-2">
+                <div class="flex gap-6">
+                    <button @click="leaderboardTab = 'hot'" :class="leaderboardTab === 'hot' ? 'text-white border-b-2 border-primary scale-105' : 'text-gray-600 hover:text-gray-400'" class="text-xl font-black italic uppercase tracking-tighter transition-all duration-300 pb-1">Diamond Hands</button>
+                    <button @click="leaderboardTab = 'cold'" :class="leaderboardTab === 'cold' ? 'text-white border-b-2 border-primary scale-105' : 'text-gray-600 hover:text-gray-400'" class="text-xl font-black italic uppercase tracking-tighter transition-all duration-300 pb-1">Paper Hands</button>
+                </div>
+                <button @click="shareLeaderboard" class="text-gray-500 hover:text-white transition text-xs font-bold uppercase tracking-widest border border-gray-700 rounded px-2 py-1">SHARE</button>
+            </div>
+            <div class="flex-1 overflow-y-auto hide-scrollbar space-y-3 pb-20">
+                <div v-if="loading" class="text-center pt-10 text-primary"><i class="fas fa-circle-notch fa-spin text-2xl"></i></div>
+                <div v-else-if="(leaderboardTab === 'hot' ? topVibes : coldVibes).length === 0" class="text-center pt-10 text-gray-500"><p>No data yet.</p></div>
+                <div v-for="(trade, idx) in (leaderboardTab === 'hot' ? topVibes : coldVibes)" :key="trade.id" class="bg-card/50 p-4 rounded-xl flex items-center border-b border-gray-800">
+                    <div class="text-xl font-black w-8 italic" :class="idx < 3 ? (leaderboardTab === 'hot' ? 'text-yellow-500' : 'text-gray-500') : 'text-gray-700'">{{ idx + 1 }}</div>
+                    <div class="flex-1 ml-2">
+                        <div class="flex items-center gap-2"><span class="font-bold text-white tracking-tight">{{ trade.ticker }}</span><span class="text-xs text-gray-500">by {{ trade.username || 'Anon' }}</span></div>
+                        <div class="text-[10px] text-gray-500 font-bold mt-1 uppercase tracking-wide">{{ leaderboardTab === 'hot' ? 'Bullish Ratio' : 'Paper Hands Ratio' }}: {{ leaderboardTab === 'hot' ? calculateRatio(trade) : (100 - calculateRatio(trade)) }}%</div>
                     </div>
-                    <div class="mb-6 bg-card/50 p-4 rounded-2xl border border-gray-800">
-                        <button @click="showPasswordChange = !showPasswordChange" class="w-full flex justify-between items-center text-left text-sm font-bold text-gray-300 hover:text-white transition"><span><i class="fas fa-lock mr-2"></i>Security</span><i class="fas" :class="showPasswordChange ? 'fa-chevron-up' : 'fa-chevron-down'"></i></button>
-                        <div v-if="showPasswordChange" class="mt-4 pt-4 border-t border-gray-700 animate-pop-in">
-                            <input v-model="newPassword" type="password" placeholder="New Password (min 6 chars)" class="w-full bg-dark border border-gray-600 rounded-lg p-3 text-white text-sm outline-none focus:border-primary mb-2">
-                            <button @click="changePassword" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg text-sm transition">Update Password</button>
-                        </div>
-                    </div>
-                    <h3 class="text-lg font-bold mb-4 border-b border-gray-800 pb-2">My Trade History</h3>
-                    <div class="space-y-3 pb-48">
-                        <div v-if="myHistory.length === 0" class="text-center py-10 text-gray-500"><i class="fas fa-history text-3xl mb-2"></i><p>No trades posted yet.</p></div>
-                        <div v-for="trade in myHistory" :key="trade.id" class="bg-card p-4 rounded-2xl border border-gray-800 relative">
-                            <div class="flex justify-between items-start"><div><div class="flex items-center gap-2"><span class="font-black text-xl tracking-tight">{{ trade.ticker }}</span><span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded" :class="trade.type === 'BUY' ? 'bg-bullish/20 text-bullish' : 'bg-bearish/20 text-bearish'">{{ trade.type }}</span></div><div class="text-xs text-gray-500 mt-1">{{ formatDate(trade.trade_date) }} • ${{ trade.price }}</div></div><div class="flex items-center gap-3"><div class="text-bullish text-sm font-bold"><i class="fas fa-heart mr-1"></i>{{ trade.likes }}</div><button @click="shareCard(trade)" class="text-gray-600 hover:text-primary transition"><i class="fas fa-share-square"></i></button><button @click="deleteTrade(trade.id)" class="text-gray-600 hover:text-red-500 transition"><i class="fas fa-trash"></i></button></div></div>
-                        </div>
+                    <div class="text-right">
+                        <div v-if="leaderboardTab === 'hot'" class="text-bullish font-black text-xl">{{ trade.likes }} <span class="text-[10px] text-gray-500 font-bold uppercase ml-1">Likes</span></div>
+                        <div v-else class="text-bearish font-black text-xl">{{ trade.dislikes }} <span class="text-[10px] text-gray-500 font-bold uppercase ml-1">Rejects</span></div>
                     </div>
                 </div>
-                <div class="fixed bottom-0 left-0 w-full px-6 py-6 bg-gradient-to-t from-dark via-dark to-transparent z-50 flex flex-col gap-3"><button @click="currentView = 'swipe'" class="w-full py-4 bg-gradient-to-r from-primary to-violet-600 hover:from-violet-500 hover:to-violet-700 rounded-2xl font-black text-lg text-white shadow-lg transition transform active:scale-95 flex items-center justify-center"><i class="fas fa-arrow-left mr-2"></i> Back to Swipe</button><button @click="handleLogout" class="w-full py-2 text-gray-500 font-bold text-xs uppercase tracking-widest hover:text-red-400 transition">Sign Out</button></div>
             </div>
-        </template>
-    </div>
+            <button @click="currentView = 'swipe'" class="w-full py-4 text-gray-500 font-bold text-sm mt-2 hover:text-white transition">Back to Swipe</button>
+        </div>
+
+        <div v-if="currentView === 'profile'" class="flex-1 flex flex-col bg-dark overflow-hidden">
+            <div class="flex-1 p-6 overflow-y-auto">
+                <div class="text-center mb-8">
+                    <div class="relative w-32 h-32 mx-auto mb-6 cursor-pointer group" @click="showAvatarMenu = !showAvatarMenu">
+                        <img :src="currentAvatarUrl" class="w-full h-full rounded-full border-4 border-card shadow-xl bg-white object-cover group-hover:border-primary transition duration-300" crossorigin="anonymous">
+                        <div class="absolute bottom-0 right-0 bg-primary p-2.5 rounded-full shadow-lg z-10"><i :class="showAvatarMenu ? 'fas fa-times' : 'fas fa-camera'" class="text-white text-sm"></i></div>
+                        <div v-if="uploadingAvatar" class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center"><i class="fas fa-circle-notch fa-spin text-white text-xl"></i></div>
+                    </div>
+                    <div v-if="showAvatarMenu" class="flex justify-center gap-6 mb-8 animate-pop-in">
+                        <button @click="setPresetAvatar(MALE_AVATAR)" class="flex flex-col items-center gap-1 group"><div class="w-16 h-16 rounded-full border-2 border-gray-600 bg-gray-800 group-hover:border-primary group-hover:scale-105 transition overflow-hidden shadow-lg"><img :src="MALE_AVATAR" class="w-full h-full object-cover" crossorigin="anonymous"></div><span class="text-[10px] text-gray-400 font-bold uppercase group-hover:text-primary transition">Male</span></button>
+                        <button @click="setPresetAvatar(FEMALE_AVATAR)" class="flex flex-col items-center gap-1 group"><div class="w-16 h-16 rounded-full border-2 border-gray-600 bg-gray-800 group-hover:border-primary group-hover:scale-105 transition overflow-hidden shadow-lg"><img :src="FEMALE_AVATAR" class="w-full h-full object-cover" crossorigin="anonymous"></div><span class="text-[10px] text-gray-400 font-bold uppercase group-hover:text-primary transition">Female</span></button>
+                        <button @click="triggerFileUpload" class="flex flex-col items-center gap-1 group"><div class="w-16 h-16 rounded-full border-2 border-gray-600 bg-gray-800 group-hover:border-primary group-hover:scale-105 transition flex items-center justify-center text-gray-400 group-hover:text-white shadow-lg"><i class="fas fa-upload text-2xl"></i></div><span class="text-[10px] text-gray-400 font-bold uppercase group-hover:text-primary transition">Upload</span></button>
+                        <input type="file" ref="fileInput" @change="handleFileUpload" accept="image/*" class="hidden-input">
+                    </div>
+                    <div class="flex items-center justify-center gap-2 mb-2">
+                        <input v-if="editingName" v-model="editUsernameInput" type="text" class="bg-card border border-gray-600 rounded px-2 py-1 text-center font-bold text-lg outline-none focus:border-primary" placeholder="Enter username">
+                        <h2 v-else class="text-2xl font-black">{{ userProfile.username || 'Trader' }}</h2>
+                        <button @click="toggleEditName" class="text-gray-400 hover:text-white text-sm"><i :class="editingName ? 'fas fa-check text-green-400' : 'fas fa-edit'"></i></button>
+                    </div>
+                    <p class="text-gray-500 text-sm truncate px-10">{{ user.email }}</p>
+                    <div class="mt-6 flex justify-center gap-3 text-sm">
+                        <div class="bg-card px-5 py-3 rounded-2xl border border-gray-700 flex-1"><span class="block font-black text-2xl text-white">{{ myHistory.length }}</span> <span class="text-gray-500 text-xs font-bold uppercase">Vibes</span></div>
+                        <button @click="shareProfile" class="bg-primary/10 hover:bg-primary/20 text-primary px-5 py-3 rounded-2xl border border-primary/30 transition active:scale-95 flex flex-col items-center justify-center gap-1"><i class="fas fa-share-alt text-xl"></i><span class="text-xs font-bold uppercase">Share Card</span></button>
+                    </div>
+                </div>
+                <div class="mb-6 bg-card/50 p-4 rounded-2xl border border-gray-800">
+                    <button @click="showPasswordChange = !showPasswordChange" class="w-full flex justify-between items-center text-left text-sm font-bold text-gray-300 hover:text-white transition"><span><i class="fas fa-lock mr-2"></i>Security</span><i class="fas" :class="showPasswordChange ? 'fa-chevron-up' : 'fa-chevron-down'"></i></button>
+                    <div v-if="showPasswordChange" class="mt-4 pt-4 border-t border-gray-700 animate-pop-in">
+                        <input v-model="newPassword" type="password" placeholder="New Password (min 6 chars)" class="w-full bg-dark border border-gray-600 rounded-lg p-3 text-white text-sm outline-none focus:border-primary mb-2">
+                        <button @click="changePassword" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg text-sm transition">Update Password</button>
+                    </div>
+                </div>
+                <h3 class="text-lg font-bold mb-4 border-b border-gray-800 pb-2">My Trade History</h3>
+                <div class="space-y-3 pb-48">
+                    <div v-if="myHistory.length === 0" class="text-center py-10 text-gray-500"><i class="fas fa-history text-3xl mb-2"></i><p>No trades posted yet.</p></div>
+                    <div v-for="trade in myHistory" :key="trade.id" class="bg-card p-4 rounded-2xl border border-gray-800 relative">
+                        <div class="flex justify-between items-start"><div><div class="flex items-center gap-2"><span class="font-black text-xl tracking-tight">{{ trade.ticker }}</span><span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded" :class="trade.type === 'BUY' ? 'bg-bullish/20 text-bullish' : 'bg-bearish/20 text-bearish'">{{ trade.type }}</span></div><div class="text-xs text-gray-500 mt-1">{{ formatDate(trade.trade_date) }} • ${{ trade.price }}</div></div><div class="flex items-center gap-3"><div class="text-bullish text-sm font-bold"><i class="fas fa-heart mr-1"></i>{{ trade.likes }}</div><button @click="shareCard(trade)" class="text-gray-600 hover:text-primary transition"><i class="fas fa-share-square"></i></button><button @click="deleteTrade(trade.id)" class="text-gray-600 hover:text-red-500 transition"><i class="fas fa-trash"></i></button></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="fixed bottom-0 left-0 w-full px-6 py-6 bg-gradient-to-t from-dark via-dark to-transparent z-50 flex flex-col gap-3"><button @click="currentView = 'swipe'" class="w-full py-4 bg-gradient-to-r from-primary to-violet-600 hover:from-violet-500 hover:to-violet-700 rounded-2xl font-black text-lg text-white shadow-lg transition transform active:scale-95 flex items-center justify-center"><i class="fas fa-arrow-left mr-2"></i> Back to Swipe</button><button @click="handleLogout" class="w-full py-2 text-gray-500 font-bold text-xs uppercase tracking-widest hover:text-red-400 transition">Sign Out</button></div>
+        </div>
+    </template>
     
     <div id="share-capture-area" class="p-8 text-center text-white relative overflow-hidden"><div class="absolute inset-0 opacity-20" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png');"></div><h1 class="text-6xl font-black italic tracking-tighter mb-4 relative z-10" style="text-shadow: 0 0 20px rgba(139,92,246,0.8);"><span class="rugged-v text-7xl">V</span>IBE<span class="text-primary">.</span></h1><div class="w-full flex flex-col items-center relative z-10 flex-1"><div v-if="shareMode !== 'card'" class="w-full flex flex-col items-center"><div class="w-28 h-28 rounded-full border-4 border-white/20 shadow-2xl mb-4 overflow-hidden bg-white"><img id="share-avatar" :src="shareData.avatar" class="w-full h-full object-cover" crossorigin="anonymous"></div><h2 class="text-2xl font-bold mb-4">{{ shareData.title }}</h2><div class="w-full bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 shadow-lg mb-6"><div class="grid grid-cols-2 gap-4"><div class="text-center border-r border-white/10"><div class="text-3xl font-black text-bullish">{{ shareData.stat1 }}</div><div class="text-[10px] uppercase tracking-widest text-gray-300">{{ shareData.label1 }}</div></div><div class="text-center"><div class="text-3xl font-black text-bearish">{{ shareData.stat2 }}</div><div class="text-[10px] uppercase tracking-widest text-gray-300">{{ shareData.label2 }}</div></div></div></div><p class="text-sm font-bold italic mb-6 px-4 leading-relaxed text-purple-200">"{{ shareData.quote }}"</p></div><div v-if="shareMode === 'card'" class="w-full flex flex-col items-center mb-6"><div class="bg-card w-full p-8 rounded-3xl border border-gray-600 shadow-2xl relative mb-4"><div class="absolute top-4 right-4 text-xs font-bold text-gray-500 uppercase">{{ shareData.date }}</div><div class="text-8xl font-black tracking-tighter text-white mb-2">{{ shareData.ticker }}</div><div class="text-4xl font-bold text-gray-400 mb-4">${{ shareData.price }}</div><div class="inline-block px-6 py-2 rounded-full text-xl font-black uppercase border-2 transform -rotate-6" :class="shareData.type === 'BUY' ? 'border-bullish text-bullish' : 'border-bearish text-bearish'">{{ shareData.type }}</div></div><p class="text-lg font-bold italic px-2 leading-relaxed text-purple-200">"{{ shareData.quote }}"</p></div><div class="mt-auto flex flex-col items-center bg-white/5 p-4 rounded-xl border border-white/10 w-full"><div id="share-qrcode" class="bg-white p-2 rounded-lg"></div><p class="text-[10px] mt-2 text-gray-400 uppercase tracking-widest">Scan to join</p></div></div></div>
 </div>
 
 <script>
     const { createApp, ref, computed, onMounted, watch } = Vue;
+    // Keys
     const SUPABASE_URL = 'https://jgrxccshcsktxxhydvja.supabase.co'; 
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpncnhjY3NoY3NrdHh4aHlkdmphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU1MjY3MjEsImV4cCI6MjA4MTEwMjcyMX0.aV6nbrPdhf7oaqdQzLSQXfAots6_STkQ3_i-P0Pz13k';
     const FINNHUB_KEY = 'd4ttplhr01qk9ur8sgrgd4ttplhr01qk9ur8sgs0'; 
+    // Avatars
     const FEMALE_AVATAR = 'https://jgrxccshcsktxxhydvja.supabase.co/storage/v1/object/public/avatars/Female%20Avatar.jpg';
     const MALE_AVATAR = 'https://jgrxccshcsktxxhydvja.supabase.co/storage/v1/object/public/avatars/Male%20Avatar.jpg'; 
     const POPULAR_STOCKS = ["NVDA", "TSLA", "AAPL", "AMD", "AMZN", "MSFT", "GOOGL", "META", "GME", "COIN", "PLTR", "HOOD", "RIVN", "NIO", "BABA", "MARA", "SMCI", "ARM", "AVGO", "SPY", "QQQ"];
@@ -305,7 +234,7 @@
     createApp({
         setup() {
             const checkingSession = ref(true);
-            const currentView = ref('landing'); // Default to LANDING
+            const currentView = ref('login'); // 🚀 Default to Login
             const user = ref(null);
             const userProfile = ref({ username: '', avatar_url: null }); 
             const editingName = ref(false);
@@ -333,13 +262,12 @@
             const uploadingAvatar = ref(false);
             const showPasswordChange = ref(false);
             const newPassword = ref('');
-            const shareMode = ref('card'); // ✅ FIXED: Missing ref in v4.2
-            const shareData = ref({});     // ✅ FIXED: Missing ref in v4.2
+            const shareMode = ref('card');
+            const shareData = ref({});
 
-            const isAuthView = computed(() => currentView.value === 'login');
             const TEMP_AFFILIATE_LINK = 'https://www.moomoo.com/us'; 
 
-            const getAvatar = (seed) => { // ✅ FIXED: Missing Helper Function
+            const getAvatar = (seed) => { 
                 return `https://api.dicebear.com/7.x/thumbs/svg?seed=${seed}&backgroundColor=1e293b`;
             };
 
@@ -373,7 +301,12 @@
                 loading.value = false;
             };
 
-            const handleLogout = async () => { await supabase.auth.signOut(); user.value = null; userProfile.value = {}; currentView.value = 'landing'; };
+            const handleLogout = async () => { 
+                await supabase.auth.signOut(); 
+                user.value = null; 
+                userProfile.value = {}; 
+                currentView.value = 'login'; 
+            };
             
             onMounted(async () => { 
                 fetchConfig(); 
@@ -383,27 +316,23 @@
                     user.value = session.user; 
                     currentView.value = 'swipe'; 
                     await fetchProfile(); fetchTrades(); 
-                } else { 
-                    if (currentView.value !== 'login') {
-                        currentView.value = 'landing';
-                    }
                 } 
+                // No else needed: default is already 'login'
                 
                 supabase.auth.onAuthStateChange(async (event, session) => { 
                     if (session) { 
                         user.value = session.user; 
-                        if (['landing', 'login'].includes(currentView.value)) { 
+                        if (currentView.value === 'login') { 
                             currentView.value = 'swipe'; await fetchProfile(); fetchTrades(); 
                         } 
                     } else { 
                         user.value = null; 
-                        currentView.value = 'landing'; 
+                        currentView.value = 'login'; 
                     } 
                 }); 
                 checkingSession.value = false; 
             });
 
-            // ... (Rest of App Logic) ...
             const fetchProfile = async () => { if (!user.value) return; const { data } = await supabase.from('profiles').select('*').eq('id', user.value.id).single(); if (data) { userProfile.value = data; } else { const defaultName = 'Trader_' + user.value.id.substring(0,4); await supabase.from('profiles').upsert([{ id: user.value.id, username: defaultName }], { onConflict: 'id' }); userProfile.value = { username: defaultName }; } };
             const toggleEditName = async () => { if (editingName.value) { if (editUsernameInput.value && editUsernameInput.value !== userProfile.value.username) { const { error } = await supabase.from('profiles').update({ username: editUsernameInput.value }).eq('id', user.value.id); if (!error) userProfile.value.username = editUsernameInput.value; } editingName.value = false; } else { editUsernameInput.value = userProfile.value.username; editingName.value = true; } };
             const setPresetAvatar = async (url) => { const { error } = await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.value.id); if (!error) { userProfile.value.avatar_url = url; showAvatarMenu.value = false; } };
@@ -479,7 +408,7 @@
             const startDrag = (e) => { isDragging.value = true; startX.value = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; };
             const onDrag = (e) => { if (!isDragging.value) return; currentX.value = (e.type.includes('mouse') ? e.clientX : e.touches[0].clientX) - startX.value; };
             const endDrag = () => { isDragging.value = false; if (Math.abs(currentX.value) > swipeThreshold) swipe(currentX.value > 0 ? 'right' : 'left'); else currentX.value = 0; };
-            const currentAvatarUrl = computed(() => userProfile.value?.avatar_url || getAvatar(userProfile.value?.username || 'user')); // ✅ FIXED: Ensure avatar logic is robust
+            const currentAvatarUrl = computed(() => userProfile.value?.avatar_url || getAvatar(userProfile.value?.username || 'user')); 
 
             watch(currentView, (newVal) => { if (newVal === 'leaderboard') fetchLeaderboard(); if (newVal === 'swipe') fetchTrades(); if (newVal === 'profile') fetchMyHistory(); });
             
