@@ -3,86 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vibe - Sentiment Analysis for Traders</title>
-    
-    <meta name="impact-site-verification" value="07ca00a0-eb0e-4ae4-ae82-a278cbdeb3aa" content="07ca00a0-eb0e-4ae4-ae82-a278cbdeb3aa" />
-    
+    <title>Vibe - Market Mood v1.2</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Black+Ops+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'], rugged: ['"Black Ops One"', 'cursive'] },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
                         dark: '#0f172a', card: '#1e293b', primary: '#8b5cf6', bullish: '#10b981', bearish: '#ef4444', warning: '#f59e0b',
-                        google: '#DB4437'
                     },
-                    animation: { 
-                        'pop-in': 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'
+                    animation: {
+                        'pop-in': 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
                     },
-                    keyframes: { 
-                        popIn: { '0%': { opacity: '0', transform: 'scale(0.8) translateY(-10px)' }, '100%': { opacity: '1', transform: 'scale(1) translateY(0)' } }
+                    keyframes: {
+                        popIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.8) translateY(-10px)' },
+                            '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+                        }
                     }
                 }
             }
         }
     </script>
     <style>
-        body { background-color: #0f172a; color: white; overflow-x: hidden; font-family: 'Inter', sans-serif; }
+        body { background-color: #0f172a; color: white; overflow: hidden; touch-action: none; font-family: 'Inter', sans-serif; }
         .card-stack { position: relative; height: 60vh; width: 100%; max-width: 400px; margin: 0 auto; perspective: 1000px; }
         .trade-card { position: absolute; width: 100%; height: 100%; background: #1e293b; border-radius: 24px; box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6); transition: transform 0.3s ease, opacity 0.3s ease; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; border: 1px solid #334155; backface-visibility: hidden; }
         .swipe-left { transform: translateX(-150%) rotate(-20deg) !important; opacity: 0; }
         .swipe-right { transform: translateX(150%) rotate(20deg) !important; opacity: 0; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .logo-glow { text-shadow: 0 0 15px rgba(139, 92, 246, 0.6); }
+        .logo-glow { text-shadow: 0 0 10px rgba(139, 92, 246, 0.5); }
         .login-bg { background: radial-gradient(circle at top right, #3b0764 0%, #0f172a 60%); }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.8); cursor: pointer; width: 24px; height: 24px; margin-right: 10px; }
         input[type="date"] { appearance: none; -webkit-appearance: none; position: relative; }
         .hidden-input { display: none; }
-        .rugged-v { font-family: 'Black Ops One', cursive; font-size: 1.2em; vertical-align: middle; margin-right: -2px; display: inline-block; transform: scaleY(1.1); }
-        #share-capture-area { position: fixed; top: -9999px; left: -9999px; width: 375px; min-height: 750px; background: radial-gradient(circle at top right, #4c1d95 0%, #0f172a 70%); z-index: 9999; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .ad-card-bg { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); border: 1px solid #4f46e5; }
+        
+        /* 隐形分享卡片样式 */
+        #share-capture-area {
+            position: fixed; top: -9999px; left: -9999px; width: 375px; min-height: 750px;
+            background: radial-gradient(circle at top right, #4c1d95 0%, #0f172a 70%);
+            z-index: 9999; font-family: 'Inter', sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
     </style>
 </head>
 <body>
 
-<div id="app" class="min-h-screen flex flex-col relative" :class="{'login-bg': currentView === 'login', 'bg-dark': currentView !== 'login'}">
+<div id="app" class="h-screen flex flex-col max-w-md mx-auto relative overflow-hidden" :class="{'login-bg': currentView === 'login', 'bg-dark': currentView !== 'login'}">
     
     <div v-if="checkingSession" class="flex-1 flex flex-col items-center justify-center bg-dark z-50">
-        <h1 class="text-4xl font-black italic tracking-tighter logo-glow mb-4 animate-pulse"><span class="rugged-v text-5xl">V</span>IBE<span class="text-primary">.</span></h1>
+        <h1 class="text-4xl font-black italic tracking-tighter logo-glow mb-4 animate-pulse">VIBE<span class="text-primary">.</span></h1>
         <i class="fas fa-circle-notch fa-spin text-primary text-2xl"></i>
     </div>
 
-    <div v-else-if="currentView === 'login'" class="flex-1 flex flex-col justify-center px-8 text-center animate-pop-in overflow-y-auto">
-        <div class="mb-10 mt-10">
-            <h1 class="text-7xl font-black italic tracking-tighter logo-glow mb-2 flex justify-center items-end"><span class="rugged-v text-8xl text-white">V</span>IBE<span class="text-primary">.</span></h1>
-            <p class="text-gray-400 text-lg font-medium tracking-wide">Login to continue.</p>
+    <div v-else-if="currentView === 'login'" class="flex-1 flex flex-col justify-center px-8 text-center animate-fade-in">
+        <div class="mb-8">
+            <h1 class="text-6xl font-black italic tracking-tighter logo-glow mb-2">VIBE<span class="text-primary">.</span></h1>
+            <p class="text-gray-400 text-lg">Swipe on market moods.</p>
         </div>
-        <div class="space-y-4 bg-card/40 p-6 rounded-3xl backdrop-blur-md border border-white/10 shadow-2xl">
-            <button @click="handleGoogleLogin" class="w-full bg-white text-black font-bold py-3.5 rounded-xl flex items-center justify-center gap-3 transition hover:bg-gray-200 active:scale-95">
-                <i class="fab fa-google text-lg text-google"></i> Continue with Google
+        <div class="space-y-3 bg-card/30 p-6 rounded-2xl backdrop-blur-md border border-white/10">
+            <h2 class="text-xl font-bold mb-4">{{ isSignUp ? 'Create Account' : 'Welcome Back' }}</h2>
+            <input v-model="email" type="email" placeholder="Email" class="w-full bg-dark/50 border border-gray-600 rounded-xl p-4 text-white outline-none focus:border-primary transition">
+            <input v-model="password" type="password" placeholder="Password (min 6 chars)" class="w-full bg-dark/50 border border-gray-600 rounded-xl p-4 text-white outline-none focus:border-primary transition" @keyup.enter="handleAuth">
+            <button @click="handleAuth" :disabled="loading" class="w-full bg-primary hover:bg-violet-600 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-primary/20 flex justify-center items-center mt-2">
+                <span v-if="loading"><i class="fas fa-circle-notch fa-spin mr-2"></i> {{ isSignUp ? 'Creating...' : 'Logging in...' }}</span>
+                <span v-else>{{ isSignUp ? 'Sign Up' : 'Log In' }}</span>
             </button>
-            <div class="relative py-2"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-600"></div></div><div class="relative flex justify-center text-xs uppercase"><span class="bg-transparent px-2 text-gray-400 font-bold backdrop-blur-sm">Or with Email</span></div></div>
-            <input v-model="email" type="email" placeholder="Email address" class="w-full bg-dark/60 border border-gray-600 rounded-xl p-4 text-white outline-none focus:border-primary transition">
-            <input v-model="password" type="password" placeholder="Password (min 6 chars)" class="w-full bg-dark/60 border border-gray-600 rounded-xl p-4 text-white outline-none focus:border-primary transition" @keyup.enter="handleUnifiedAuth">
-            <button @click="handleUnifiedAuth" :disabled="loading" class="w-full bg-primary hover:bg-violet-600 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-primary/20 flex justify-center items-center mt-2 active:scale-95">
-                <span v-if="loading"><i class="fas fa-circle-notch fa-spin mr-2"></i> Connecting...</span><span v-else>Continue <i class="fas fa-arrow-right ml-2"></i></span>
-            </button>
+            <div class="text-sm text-gray-400 mt-4 cursor-pointer hover:text-white" @click="isSignUp = !isSignUp">
+                {{ isSignUp ? 'Already have an account? Log In' : "New here? Create Account" }}
+            </div>
         </div>
-        <p class="text-[10px] text-gray-500 mt-8 mb-4">New account? We'll create one automatically.</p>
     </div>
 
     <template v-else>
         <div class="flex justify-between items-center px-6 py-5 z-10 bg-dark/90 backdrop-blur-sm">
-            <button @click="currentView = 'leaderboard'" class="text-gray-400 hover:text-white transition text-left font-black italic tracking-tight text-sm active:scale-95 border-b border-transparent hover:border-white">HOT LIST</button>
-            <h1 class="text-3xl font-black tracking-tighter cursor-pointer logo-glow italic flex items-end" @click="currentView = 'swipe'"><span class="rugged-v text-4xl">V</span>IBE<span class="text-primary">.</span></h1>
+            <button @click="currentView = 'leaderboard'" class="text-gray-400 hover:text-white transition text-left font-black italic tracking-tight text-sm active:scale-95">HOT LIST</button>
+            
+            <h1 class="text-3xl font-black tracking-tighter cursor-pointer logo-glow italic" @click="currentView = 'swipe'">VIBE<span class="text-primary">.</span></h1>
             <button @click="currentView = 'profile'" class="w-10 h-10 rounded-full bg-gray-700 border border-gray-500 overflow-hidden shadow-md active:scale-90 transition relative">
                 <img :src="currentAvatarUrl" class="w-full h-full object-cover bg-white" crossorigin="anonymous">
             </button>
@@ -92,80 +97,127 @@
             <div class="card-stack">
                 <div v-if="loading" class="flex items-center justify-center h-full text-primary animate-pulse"><i class="fas fa-circle-notch fa-spin text-3xl"></i></div>
                 <div v-else-if="cards.length === 0" class="flex items-center justify-center h-full text-gray-500 text-center">
-                    <div><p class="text-6xl mb-4">🙌</p><h2 class="text-2xl font-bold text-white mb-2">All Caught Up!</h2><button @click="currentView = 'post'" class="mt-8 px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full text-white font-black shadow-lg hover:scale-105 transition transform">POST YOUR VIBE <i class="fas fa-plus ml-2"></i></button></div>
+                    <div>
+                        <p class="text-6xl mb-4">🙌</p>
+                        <h2 class="text-2xl font-bold text-white mb-2">All Caught Up!</h2>
+                        <button @click="currentView = 'post'" class="mt-8 px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full text-white font-black shadow-lg hover:scale-105 transition transform">POST YOUR VIBE <i class="fas fa-plus ml-2"></i></button>
+                    </div>
                 </div>
                 
-                <div v-for="(card, index) in displayedCards" :key="card.id" 
-                     class="trade-card p-6" 
-                     :class="{'ad-card-bg': card.isAd}"
-                     :style="{ zIndex: cards.length - index, transform: index === 0 ? currentTransform : 'scale(0.95) translateY(10px)' }" 
+                <div v-for="(card, index) in displayedCards" :key="card.id" class="trade-card p-6"
+                     :style="{ zIndex: cards.length - index, transform: index === 0 ? currentTransform : 'scale(0.95) translateY(10px)' }"
                      @touchstart="startDrag" @touchmove="onDrag" @touchend="endDrag" @mousedown="startDrag" @mousemove="onDrag" @mouseup="endDrag" @mouseleave="endDrag">
                     
-                    <div v-if="card.isAd" class="h-full flex flex-col justify-between text-center relative z-10">
-                        <div class="flex justify-between items-center text-xs font-bold text-blue-300 uppercase tracking-widest">
-                            <span>Sponsored</span>
-                            <span>Promoted</span>
-                        </div>
-                        <div class="flex-1 flex flex-col justify-center items-center pointer-events-none">
-                            <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg animate-pulse">
-                                <i class="fas fa-gift text-4xl text-blue-900"></i>
-                            </div>
-                            <h2 class="text-3xl font-black italic tracking-tighter text-white mb-2">{{ card.ticker }}</h2>
-                            <p class="text-blue-100 font-bold text-lg px-4 leading-tight">{{ card.title }}</p>
-                            <div class="mt-6 bg-white text-blue-900 px-6 py-3 rounded-full font-black text-sm shadow-xl transform scale-110">
-                                CLAIM NOW <i class="fas fa-arrow-right ml-1"></i>
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center">
+                            <img :src="card.profiles?.avatar_url || getAvatar(card.profiles?.username || card.user_id)" class="w-10 h-10 rounded-full border border-gray-700 bg-white object-cover" crossorigin="anonymous">
+                            <div class="ml-3 text-left">
+                                <p class="font-bold text-sm tracking-tight text-gray-300">{{ card.profiles?.username || 'Trader #' + card.user_id.substring(0,4) }}</p>
+                                <p class="text-[10px] text-gray-400 font-bold uppercase"><i class="far fa-calendar-alt mr-1"></i>{{ formatDate(card.trade_date) }}</p>
                             </div>
                         </div>
-                        <div class="text-[10px] text-blue-400/50 uppercase tracking-widest">Swipe Left or Right to Claim</div>
+                        <div class="flex gap-2">
+                             <button @click.stop="shareCard(card)" class="w-8 h-8 rounded-full bg-gray-700/50 flex items-center justify-center text-gray-300 hover:text-white hover:bg-primary transition"><i class="fas fa-share-square text-xs"></i></button>
+                             <div class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center" :class="card.type === 'BUY' ? 'bg-bullish/10 text-bullish' : 'bg-bearish/10 text-bearish'">{{ card.type }}</div>
+                        </div>
                     </div>
-
-                    <template v-else>
-                        <div class="flex justify-between items-start">
-                            <div class="flex items-center"><img :src="card.profiles?.avatar_url || getAvatar(card.profiles?.username || card.user_id)" class="w-10 h-10 rounded-full border border-gray-700 bg-white object-cover" crossorigin="anonymous"><div class="ml-3 text-left"><p class="font-bold text-sm tracking-tight text-gray-300">{{ card.profiles?.username || 'Trader #' + card.user_id.substring(0,4) }}</p><p class="text-[10px] text-gray-400 font-bold uppercase"><i class="far fa-calendar-alt mr-1"></i>{{ formatDate(card.trade_date) }}</p></div></div>
-                            <div class="flex gap-2"><button @click.stop="shareCard(card)" class="w-8 h-8 rounded-full bg-gray-700/50 flex items-center justify-center text-gray-300 hover:text-white hover:bg-primary transition"><i class="fas fa-share-square text-xs"></i></button><div class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center" :class="card.type === 'BUY' ? 'bg-bullish/10 text-bullish' : 'bg-bearish/10 text-bearish'">{{ card.type }}</div></div>
+                    
+                    <div class="text-center my-4 select-none flex-1 flex flex-col justify-center">
+                        <h2 class="text-7xl font-black tracking-tighter mb-2 text-white">{{ card.ticker }}</h2>
+                        <div class="text-3xl font-bold text-gray-400">${{ card.price }}</div>
+                        <div class="text-sm text-gray-500 font-medium mt-1">{{ card.shares }} shares • ${{ (card.price * card.shares).toLocaleString() }}</div>
+                        <div class="mt-4">
+                            <span v-if="card.verified" class="inline-flex items-center gap-1 px-3 py-1 bg-bullish/10 text-bullish text-xs font-bold rounded-full border border-bullish/30"><i class="fas fa-check-circle"></i> VERIFIED PRICE</span>
+                            <span v-else class="inline-flex items-center gap-1 px-3 py-1 bg-warning/10 text-warning text-xs font-bold rounded-full border border-warning/30"><i class="fas fa-exclamation-triangle"></i> PRICE MISMATCH</span>
                         </div>
-                        <div class="text-center my-4 select-none flex-1 flex flex-col justify-center"><h2 class="text-7xl font-black tracking-tighter mb-2 text-white">{{ card.ticker }}</h2><div class="text-3xl font-bold text-gray-400">${{ card.price }}</div><div class="text-sm text-gray-500 font-medium mt-1">{{ card.shares }} shares • ${{ (card.price * card.shares).toLocaleString() }}</div><div class="mt-4"><span v-if="card.verified" class="inline-flex items-center gap-1 px-3 py-1 bg-bullish/10 text-bullish text-xs font-bold rounded-full border border-bullish/30"><i class="fas fa-check-circle"></i> VERIFIED</span><span v-else class="inline-flex items-center gap-1 px-3 py-1 bg-warning/10 text-warning text-xs font-bold rounded-full border border-warning/30"><i class="fas fa-exclamation-triangle"></i> MISMATCH</span></div></div>
-                    </template>
-
-                    <div v-if="index === 0 && swipeStatus === 'LIKE'" class="absolute top-20 left-8 border-4 border-bullish text-bullish font-black text-5xl px-4 py-2 rounded-xl -rotate-12 opacity-80 uppercase tracking-tighter">{{ card.isAd ? 'CLAIM' : 'BULL' }}</div>
-                    <div v-if="index === 0 && swipeStatus === 'NOPE'" class="absolute top-20 right-8 border-4 border-bearish text-bearish font-black text-5xl px-4 py-2 rounded-xl rotate-12 opacity-80 uppercase tracking-tighter">{{ card.isAd ? 'CLAIM' : 'BEAR' }}</div>
+                    </div>
+                    <div v-if="index === 0 && swipeStatus === 'LIKE'" class="absolute top-20 left-8 border-4 border-bullish text-bullish font-black text-5xl px-4 py-2 rounded-xl -rotate-12 opacity-80 uppercase tracking-tighter">BULL</div>
+                    <div v-if="index === 0 && swipeStatus === 'NOPE'" class="absolute top-20 right-8 border-4 border-bearish text-bearish font-black text-5xl px-4 py-2 rounded-xl rotate-12 opacity-80 uppercase tracking-tighter">BEAR</div>
                 </div>
             </div>
-            <div v-if="cards.length > 0" class="flex justify-between items-center px-12 mt-6"><button @click="swipe('left')" class="w-16 h-16 rounded-full bg-gray-800 text-bearish text-2xl border border-gray-700 shadow-xl flex items-center justify-center active:scale-90 transition"><i class="fas fa-times"></i></button><button @click="currentView = 'post'" class="w-14 h-14 rounded-full bg-gray-700 text-white text-xl border border-gray-600 shadow-lg flex items-center justify-center active:scale-90 transition"><i class="fas fa-plus"></i></button><button @click="swipe('right')" class="w-16 h-16 rounded-full bg-gray-800 text-bullish text-2xl border border-gray-700 shadow-xl flex items-center justify-center active:scale-90 transition"><i class="fas fa-heart"></i></button></div>
+            <div v-if="cards.length > 0" class="flex justify-between items-center px-12 mt-6">
+                <button @click="swipe('left')" class="w-16 h-16 rounded-full bg-gray-800 text-bearish text-2xl border border-gray-700 shadow-xl flex items-center justify-center active:scale-90 transition"><i class="fas fa-times"></i></button>
+                <button @click="currentView = 'post'" class="w-14 h-14 rounded-full bg-gray-700 text-white text-xl border border-gray-600 shadow-lg flex items-center justify-center active:scale-90 transition"><i class="fas fa-plus"></i></button>
+                <button @click="swipe('right')" class="w-16 h-16 rounded-full bg-gray-800 text-bullish text-2xl border border-gray-700 shadow-xl flex items-center justify-center active:scale-90 transition"><i class="fas fa-heart"></i></button>
+            </div>
         </div>
 
         <div v-if="currentView === 'post'" class="flex-1 p-6 overflow-y-auto bg-dark">
             <h2 class="text-2xl font-black mb-6 tracking-tight">Post Your Vibe</h2>
             <div class="space-y-5">
-                <div class="relative z-50"><label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Ticker</label><div class="relative"><input v-model="tickerInput" @input="filterStocks" @focus="showSuggestions = true" type="text" placeholder="e.g. NVDA" class="w-full bg-card p-5 pl-5 rounded-2xl text-3xl font-black uppercase border border-gray-700 focus:border-primary outline-none transition placeholder-gray-600 text-white shadow-lg"><ul v-if="showSuggestions && filteredStocks.length > 0" class="absolute w-full bg-gray-800 border border-gray-700 rounded-xl mt-2 max-h-48 overflow-y-auto shadow-2xl z-50"><li v-for="stock in filteredStocks" :key="stock" @click="selectStock(stock)" class="p-4 hover:bg-gray-700 cursor-pointer border-b border-gray-700/50 flex justify-between"><span class="font-bold text-white">{{ stock }}</span></li></ul></div></div>
-                <div><label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Trade Date</label><div class="relative flex items-center bg-card rounded-2xl border border-gray-700 focus-within:border-primary transition shadow-md overflow-hidden"><div class="pl-5 text-gray-400 text-xl pointer-events-none"><i class="far fa-calendar-alt"></i></div><input v-model="newTrade.date" type="date" class="w-full bg-transparent p-5 text-xl font-bold outline-none text-white placeholder-gray-500 font-sans" required></div></div>
-                <div class="flex gap-4"><div class="flex-1"><label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Price</label><div class="relative flex items-center bg-card rounded-2xl border border-gray-700 focus-within:border-primary transition shadow-md"><span class="pl-5 text-gray-400 text-lg font-bold">$</span><input v-model="newTrade.price" type="number" step="0.01" placeholder="0.00" class="w-full bg-transparent p-5 pl-2 text-xl font-bold outline-none text-white"></div></div><div class="flex-1"><label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Shares</label><div class="relative bg-card rounded-2xl border border-gray-700 focus-within:border-primary transition shadow-md"><input v-model="newTrade.shares" type="number" placeholder="1" class="w-full bg-transparent p-5 text-xl font-bold outline-none text-white"></div></div></div>
-                <div><label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Vibe</label><div class="relative"><select v-model="newTrade.type" class="w-full bg-card p-5 rounded-2xl text-xl font-bold border border-gray-700 focus:border-primary outline-none appearance-none text-white shadow-md"><option value="BUY">BUY 🚀 (Bullish)</option><option value="SELL">SELL 💀 (Bearish)</option></select><div class="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"><i class="fas fa-chevron-down"></i></div></div></div>
+                <div class="relative z-50">
+                    <label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Ticker</label>
+                    <div class="relative">
+                        <input v-model="tickerInput" @input="filterStocks" @focus="showSuggestions = true" type="text" placeholder="e.g. NVDA" class="w-full bg-card p-5 pl-5 rounded-2xl text-3xl font-black uppercase border border-gray-700 focus:border-primary outline-none transition placeholder-gray-600 text-white shadow-lg">
+                        <ul v-if="showSuggestions && filteredStocks.length > 0" class="absolute w-full bg-gray-800 border border-gray-700 rounded-xl mt-2 max-h-48 overflow-y-auto shadow-2xl z-50">
+                            <li v-for="stock in filteredStocks" :key="stock" @click="selectStock(stock)" class="p-4 hover:bg-gray-700 cursor-pointer border-b border-gray-700/50 flex justify-between"><span class="font-bold text-white">{{ stock }}</span></li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Trade Date</label>
+                    <div class="relative flex items-center bg-card rounded-2xl border border-gray-700 focus-within:border-primary transition shadow-md overflow-hidden">
+                        <div class="pl-5 text-gray-400 text-xl pointer-events-none"><i class="far fa-calendar-alt"></i></div>
+                        <input v-model="newTrade.date" type="date" class="w-full bg-transparent p-5 text-xl font-bold outline-none text-white placeholder-gray-500 font-sans" required>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Price</label>
+                        <div class="relative flex items-center bg-card rounded-2xl border border-gray-700 focus-within:border-primary transition shadow-md">
+                            <span class="pl-5 text-gray-400 text-lg font-bold">$</span>
+                            <input v-model="newTrade.price" type="number" step="0.01" placeholder="0.00" class="w-full bg-transparent p-5 pl-2 text-xl font-bold outline-none text-white">
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Shares</label>
+                        <div class="relative bg-card rounded-2xl border border-gray-700 focus-within:border-primary transition shadow-md">
+                            <input v-model="newTrade.shares" type="number" placeholder="1" class="w-full bg-transparent p-5 text-xl font-bold outline-none text-white">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2 block ml-1">Vibe</label>
+                    <div class="relative">
+                        <select v-model="newTrade.type" class="w-full bg-card p-5 rounded-2xl text-xl font-bold border border-gray-700 focus:border-primary outline-none appearance-none text-white shadow-md">
+                            <option value="BUY">BUY 🚀 (Bullish)</option>
+                            <option value="SELL">SELL 💀 (Bearish)</option>
+                        </select>
+                        <div class="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"><i class="fas fa-chevron-down"></i></div>
+                    </div>
+                </div>
                 <div v-if="validating" class="text-center py-4 bg-gray-800/50 rounded-xl border border-gray-700/50"><i class="fas fa-sync fa-spin text-primary mr-2"></i> <span class="text-gray-400 text-sm">Verifying with market data...</span></div>
-                <div class="pt-2"><button @click="submitTrade" :disabled="submitting || validating" class="w-full py-5 bg-gradient-to-r from-primary to-violet-600 hover:from-violet-500 hover:to-violet-700 rounded-2xl font-black text-lg shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition transform active:scale-95 text-white tracking-wide">{{ submitting ? 'POSTING...' : 'SEND IT 🚀' }}</button><button @click="currentView = 'swipe'" class="w-full py-4 text-gray-500 font-bold text-sm hover:text-white transition mt-2">Cancel</button></div>
+                <div class="pt-2">
+                    <button @click="submitTrade" :disabled="submitting || validating" class="w-full py-5 bg-gradient-to-r from-primary to-violet-600 hover:from-violet-500 hover:to-violet-700 rounded-2xl font-black text-lg shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition transform active:scale-95 text-white tracking-wide">{{ submitting ? 'POSTING...' : 'SEND IT 🚀' }}</button>
+                    <button @click="currentView = 'swipe'" class="w-full py-4 text-gray-500 font-bold text-sm hover:text-white transition mt-2">Cancel</button>
+                </div>
             </div>
         </div>
 
         <div v-if="currentView === 'leaderboard'" class="flex-1 p-4 overflow-hidden flex flex-col">
-            <div class="flex justify-between items-end mb-6 px-2 mt-2">
-                <div class="flex gap-6">
-                    <button @click="leaderboardTab = 'hot'" :class="leaderboardTab === 'hot' ? 'text-white border-b-2 border-primary scale-105' : 'text-gray-600 hover:text-gray-400'" class="text-xl font-black italic uppercase tracking-tighter transition-all duration-300 pb-1">Diamond Hands</button>
-                    <button @click="leaderboardTab = 'cold'" :class="leaderboardTab === 'cold' ? 'text-white border-b-2 border-primary scale-105' : 'text-gray-600 hover:text-gray-400'" class="text-xl font-black italic uppercase tracking-tighter transition-all duration-300 pb-1">Paper Hands</button>
+            <div class="flex gap-2 mb-4">
+                <div class="flex-1 flex p-1 bg-gray-800/50 rounded-xl border border-gray-700">
+                    <button @click="leaderboardTab = 'hot'" :class="leaderboardTab === 'hot' ? 'bg-card text-white shadow-md' : 'text-gray-500 hover:text-gray-300'" class="flex-1 py-2 rounded-lg text-sm font-bold transition flex justify-center items-center gap-2">Diamond Hands</button>
+                    <button @click="leaderboardTab = 'cold'" :class="leaderboardTab === 'cold' ? 'bg-card text-white shadow-md' : 'text-gray-500 hover:text-gray-300'" class="flex-1 py-2 rounded-lg text-sm font-bold transition flex justify-center items-center gap-2">Paper Hands</button>
                 </div>
-                <button @click="shareLeaderboard" class="text-gray-500 hover:text-white transition text-xs font-bold uppercase tracking-widest border border-gray-700 rounded px-2 py-1">SHARE</button>
+                <button @click="shareLeaderboard" class="w-12 bg-gray-800/50 border border-gray-700 rounded-xl flex items-center justify-center text-primary hover:bg-gray-700 transition active:scale-95"><i class="fas fa-share-alt"></i></button>
             </div>
+
             <div class="flex-1 overflow-y-auto hide-scrollbar space-y-3 pb-20">
                 <div v-if="loading" class="text-center pt-10 text-primary"><i class="fas fa-circle-notch fa-spin text-2xl"></i></div>
-                <div v-else-if="(leaderboardTab === 'hot' ? topVibes : coldVibes).length === 0" class="text-center pt-10 text-gray-500"><p>No data yet.</p></div>
-                <div v-for="(trade, idx) in (leaderboardTab === 'hot' ? topVibes : coldVibes)" :key="trade.id" class="bg-card/50 p-4 rounded-xl flex items-center border-b border-gray-800">
-                    <div class="text-xl font-black w-8 italic" :class="idx < 3 ? (leaderboardTab === 'hot' ? 'text-yellow-500' : 'text-gray-500') : 'text-gray-700'">{{ idx + 1 }}</div>
-                    <div class="flex-1 ml-2">
-                        <div class="flex items-center gap-2"><span class="font-bold text-white tracking-tight">{{ trade.ticker }}</span><span class="text-xs text-gray-500">by {{ trade.username || 'Anon' }}</span></div>
-                        <div class="text-[10px] text-gray-500 font-bold mt-1 uppercase tracking-wide">{{ leaderboardTab === 'hot' ? 'Bullish Ratio' : 'Paper Hands Ratio' }}: {{ leaderboardTab === 'hot' ? calculateRatio(trade) : (100 - calculateRatio(trade)) }}%</div>
+                <div v-else-if="(leaderboardTab === 'hot' ? topVibes : coldVibes).length === 0" class="text-center pt-10 text-gray-500"><p class="text-4xl mb-2">{{ leaderboardTab === 'hot' ? '💎' : '📄' }}</p><p>No data yet.</p></div>
+                <div v-for="(trade, idx) in (leaderboardTab === 'hot' ? topVibes : coldVibes)" :key="trade.id" class="bg-card p-4 rounded-2xl flex items-center border border-gray-800 relative overflow-hidden">
+                    <div class="text-2xl font-black w-10 italic z-10" :class="idx < 3 ? (leaderboardTab === 'hot' ? 'text-yellow-500' : 'text-gray-400') : 'text-gray-700'">#{{ idx + 1 }}</div>
+                    <div class="flex-1 ml-2 z-10">
+                        <div class="flex items-center gap-2">
+                            <span class="font-black text-lg tracking-tight">{{ trade.ticker }}</span>
+                            <span class="text-[10px] text-gray-400 bg-gray-700/50 px-1 rounded truncate max-w-[80px]">by {{ trade.username || 'Anon' }}</span>
+                        </div>
+                        <div class="text-sm font-medium flex gap-3 mt-1"><span class="text-bullish font-bold"><i class="fas fa-arrow-up text-[10px]"></i> {{ trade.likes }}</span><span class="text-bearish font-bold"><i class="fas fa-times text-[10px]"></i> {{ trade.dislikes }}</span></div>
                     </div>
-                    <div class="text-right">
-                        <div v-if="leaderboardTab === 'hot'" class="text-bullish font-black text-xl">{{ trade.likes }} <span class="text-[10px] text-gray-500 font-bold uppercase ml-1">Likes</span></div>
-                        <div v-else class="text-bearish font-black text-xl">{{ trade.dislikes }} <span class="text-[10px] text-gray-500 font-bold uppercase ml-1">Rejects</span></div>
+                    <div class="text-right z-10">
+                        <div v-if="leaderboardTab === 'hot'" class="text-bullish font-black text-xl bg-bullish/10 px-3 py-1 rounded-lg"><i class="fas fa-heart text-sm mr-1"></i>{{ trade.likes }}</div>
+                        <div v-else class="text-bearish font-black text-xl bg-bearish/10 px-3 py-1 rounded-lg"><i class="fas fa-times text-sm mr-1"></i>{{ trade.dislikes }}</div>
                     </div>
                 </div>
             </div>
@@ -177,64 +229,152 @@
                 <div class="text-center mb-8">
                     <div class="relative w-32 h-32 mx-auto mb-6 cursor-pointer group" @click="showAvatarMenu = !showAvatarMenu">
                         <img :src="currentAvatarUrl" class="w-full h-full rounded-full border-4 border-card shadow-xl bg-white object-cover group-hover:border-primary transition duration-300" crossorigin="anonymous">
-                        <div class="absolute bottom-0 right-0 bg-primary p-2.5 rounded-full shadow-lg z-10"><i :class="showAvatarMenu ? 'fas fa-times' : 'fas fa-camera'" class="text-white text-sm"></i></div>
+                        <div class="absolute bottom-0 right-0 bg-primary p-2.5 rounded-full shadow-lg z-10">
+                            <i :class="showAvatarMenu ? 'fas fa-times' : 'fas fa-camera'" class="text-white text-sm"></i>
+                        </div>
                         <div v-if="uploadingAvatar" class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center"><i class="fas fa-circle-notch fa-spin text-white text-xl"></i></div>
                     </div>
+
                     <div v-if="showAvatarMenu" class="flex justify-center gap-6 mb-8 animate-pop-in">
-                        <button @click="setPresetAvatar(MALE_AVATAR)" class="flex flex-col items-center gap-1 group"><div class="w-16 h-16 rounded-full border-2 border-gray-600 bg-gray-800 group-hover:border-primary group-hover:scale-105 transition overflow-hidden shadow-lg"><img :src="MALE_AVATAR" class="w-full h-full object-cover" crossorigin="anonymous"></div><span class="text-[10px] text-gray-400 font-bold uppercase group-hover:text-primary transition">Male</span></button>
-                        <button @click="setPresetAvatar(FEMALE_AVATAR)" class="flex flex-col items-center gap-1 group"><div class="w-16 h-16 rounded-full border-2 border-gray-600 bg-gray-800 group-hover:border-primary group-hover:scale-105 transition overflow-hidden shadow-lg"><img :src="FEMALE_AVATAR" class="w-full h-full object-cover" crossorigin="anonymous"></div><span class="text-[10px] text-gray-400 font-bold uppercase group-hover:text-primary transition">Female</span></button>
-                        <button @click="triggerFileUpload" class="flex flex-col items-center gap-1 group"><div class="w-16 h-16 rounded-full border-2 border-gray-600 bg-gray-800 group-hover:border-primary group-hover:scale-105 transition flex items-center justify-center text-gray-400 group-hover:text-white shadow-lg"><i class="fas fa-upload text-2xl"></i></div><span class="text-[10px] text-gray-400 font-bold uppercase group-hover:text-primary transition">Upload</span></button>
+                        <button @click="setPresetAvatar(MALE_AVATAR)" class="flex flex-col items-center gap-1 group">
+                            <div class="w-16 h-16 rounded-full border-2 border-gray-600 bg-gray-800 group-hover:border-primary group-hover:scale-105 transition overflow-hidden shadow-lg">
+                                <img :src="MALE_AVATAR" class="w-full h-full object-cover" crossorigin="anonymous">
+                            </div>
+                            <span class="text-[10px] text-gray-400 font-bold uppercase group-hover:text-primary transition">Male</span>
+                        </button>
+                        <button @click="setPresetAvatar(FEMALE_AVATAR)" class="flex flex-col items-center gap-1 group">
+                            <div class="w-16 h-16 rounded-full border-2 border-gray-600 bg-gray-800 group-hover:border-primary group-hover:scale-105 transition overflow-hidden shadow-lg">
+                                <img :src="FEMALE_AVATAR" class="w-full h-full object-cover" crossorigin="anonymous">
+                            </div>
+                            <span class="text-[10px] text-gray-400 font-bold uppercase group-hover:text-primary transition">Female</span>
+                        </button>
+                        <button @click="triggerFileUpload" class="flex flex-col items-center gap-1 group">
+                            <div class="w-16 h-16 rounded-full border-2 border-gray-600 bg-gray-800 group-hover:border-primary group-hover:scale-105 transition flex items-center justify-center text-gray-400 group-hover:text-white shadow-lg">
+                                <i class="fas fa-upload text-2xl"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-400 font-bold uppercase group-hover:text-primary transition">Upload</span>
+                        </button>
                         <input type="file" ref="fileInput" @change="handleFileUpload" accept="image/*" class="hidden-input">
                     </div>
+
                     <div class="flex items-center justify-center gap-2 mb-2">
                         <input v-if="editingName" v-model="editUsernameInput" type="text" class="bg-card border border-gray-600 rounded px-2 py-1 text-center font-bold text-lg outline-none focus:border-primary" placeholder="Enter username">
                         <h2 v-else class="text-2xl font-black">{{ userProfile.username || 'Trader' }}</h2>
                         <button @click="toggleEditName" class="text-gray-400 hover:text-white text-sm"><i :class="editingName ? 'fas fa-check text-green-400' : 'fas fa-edit'"></i></button>
                     </div>
                     <p class="text-gray-500 text-sm truncate px-10">{{ user.email }}</p>
+                    
                     <div class="mt-6 flex justify-center gap-3 text-sm">
-                        <div class="bg-card px-5 py-3 rounded-2xl border border-gray-700 flex-1"><span class="block font-black text-2xl text-white">{{ myHistory.length }}</span> <span class="text-gray-500 text-xs font-bold uppercase">Vibes</span></div>
-                        <button @click="shareProfile" class="bg-primary/10 hover:bg-primary/20 text-primary px-5 py-3 rounded-2xl border border-primary/30 transition active:scale-95 flex flex-col items-center justify-center gap-1"><i class="fas fa-share-alt text-xl"></i><span class="text-xs font-bold uppercase">Share Card</span></button>
+                        <div class="bg-card px-5 py-3 rounded-2xl border border-gray-700 flex-1">
+                            <span class="block font-black text-2xl text-white">{{ myHistory.length }}</span> 
+                            <span class="text-gray-500 text-xs font-bold uppercase">Vibes</span>
+                        </div>
+                        <button @click="shareProfile" class="bg-primary/10 hover:bg-primary/20 text-primary px-5 py-3 rounded-2xl border border-primary/30 transition active:scale-95 flex flex-col items-center justify-center gap-1">
+                            <i class="fas fa-share-alt text-xl"></i>
+                            <span class="text-xs font-bold uppercase">Share Card</span>
+                        </button>
                     </div>
                 </div>
-                <div class="mb-6 bg-card/50 p-4 rounded-2xl border border-gray-800">
-                    <button @click="showPasswordChange = !showPasswordChange" class="w-full flex justify-between items-center text-left text-sm font-bold text-gray-300 hover:text-white transition"><span><i class="fas fa-lock mr-2"></i>Security</span><i class="fas" :class="showPasswordChange ? 'fa-chevron-up' : 'fa-chevron-down'"></i></button>
-                    <div v-if="showPasswordChange" class="mt-4 pt-4 border-t border-gray-700 animate-pop-in">
-                        <input v-model="newPassword" type="password" placeholder="New Password (min 6 chars)" class="w-full bg-dark border border-gray-600 rounded-lg p-3 text-white text-sm outline-none focus:border-primary mb-2">
-                        <button @click="changePassword" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg text-sm transition">Update Password</button>
-                    </div>
-                </div>
+
                 <h3 class="text-lg font-bold mb-4 border-b border-gray-800 pb-2">My Trade History</h3>
+                
                 <div class="space-y-3 pb-48">
                     <div v-if="myHistory.length === 0" class="text-center py-10 text-gray-500"><i class="fas fa-history text-3xl mb-2"></i><p>No trades posted yet.</p></div>
                     <div v-for="trade in myHistory" :key="trade.id" class="bg-card p-4 rounded-2xl border border-gray-800 relative">
-                        <div class="flex justify-between items-start"><div><div class="flex items-center gap-2"><span class="font-black text-xl tracking-tight">{{ trade.ticker }}</span><span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded" :class="trade.type === 'BUY' ? 'bg-bullish/20 text-bullish' : 'bg-bearish/20 text-bearish'">{{ trade.type }}</span></div><div class="text-xs text-gray-500 mt-1">{{ formatDate(trade.trade_date) }} • ${{ trade.price }}</div></div><div class="flex items-center gap-3"><div class="text-bullish text-sm font-bold"><i class="fas fa-heart mr-1"></i>{{ trade.likes }}</div><button @click="shareCard(trade)" class="text-gray-600 hover:text-primary transition"><i class="fas fa-share-square"></i></button><button @click="deleteTrade(trade.id)" class="text-gray-600 hover:text-red-500 transition"><i class="fas fa-trash"></i></button></div></div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-black text-xl tracking-tight">{{ trade.ticker }}</span>
+                                    <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded" :class="trade.type === 'BUY' ? 'bg-bullish/20 text-bullish' : 'bg-bearish/20 text-bearish'">{{ trade.type }}</span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">{{ formatDate(trade.trade_date) }} • ${{ trade.price }}</div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="text-bullish text-sm font-bold"><i class="fas fa-heart mr-1"></i>{{ trade.likes }}</div>
+                                <button @click="shareCard(trade)" class="text-gray-600 hover:text-primary transition"><i class="fas fa-share-square"></i></button>
+                                <button @click="deleteTrade(trade.id)" class="text-gray-600 hover:text-red-500 transition"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="fixed bottom-0 left-0 w-full px-6 py-6 bg-gradient-to-t from-dark via-dark to-transparent z-50 flex flex-col gap-3"><button @click="currentView = 'swipe'" class="w-full py-4 bg-gradient-to-r from-primary to-violet-600 hover:from-violet-500 hover:to-violet-700 rounded-2xl font-black text-lg text-white shadow-lg transition transform active:scale-95 flex items-center justify-center"><i class="fas fa-arrow-left mr-2"></i> Back to Swipe</button><button @click="handleLogout" class="w-full py-2 text-gray-500 font-bold text-xs uppercase tracking-widest hover:text-red-400 transition">Sign Out</button></div>
+
+            <div class="fixed bottom-0 left-0 w-full px-6 py-6 bg-gradient-to-t from-dark via-dark to-transparent z-50 flex flex-col gap-3">
+                <button @click="currentView = 'swipe'" class="w-full py-4 bg-gradient-to-r from-primary to-violet-600 hover:from-violet-500 hover:to-violet-700 rounded-2xl font-black text-lg text-white shadow-lg transition transform active:scale-95 flex items-center justify-center">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Swipe
+                </button>
+                <button @click="handleLogout" class="w-full py-2 text-gray-500 font-bold text-xs uppercase tracking-widest hover:text-red-400 transition">
+                    Sign Out
+                </button>
+            </div>
         </div>
     </template>
-    
-    <div id="share-capture-area" class="p-8 text-center text-white relative overflow-hidden"><div class="absolute inset-0 opacity-20" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png');"></div><h1 class="text-6xl font-black italic tracking-tighter mb-4 relative z-10" style="text-shadow: 0 0 20px rgba(139,92,246,0.8);"><span class="rugged-v text-7xl">V</span>IBE<span class="text-primary">.</span></h1><div class="w-full flex flex-col items-center relative z-10 flex-1"><div v-if="shareMode !== 'card'" class="w-full flex flex-col items-center"><div class="w-28 h-28 rounded-full border-4 border-white/20 shadow-2xl mb-4 overflow-hidden bg-white"><img id="share-avatar" :src="shareData.avatar" class="w-full h-full object-cover" crossorigin="anonymous"></div><h2 class="text-2xl font-bold mb-4">{{ shareData.title }}</h2><div class="w-full bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 shadow-lg mb-6"><div class="grid grid-cols-2 gap-4"><div class="text-center border-r border-white/10"><div class="text-3xl font-black text-bullish">{{ shareData.stat1 }}</div><div class="text-[10px] uppercase tracking-widest text-gray-300">{{ shareData.label1 }}</div></div><div class="text-center"><div class="text-3xl font-black text-bearish">{{ shareData.stat2 }}</div><div class="text-[10px] uppercase tracking-widest text-gray-300">{{ shareData.label2 }}</div></div></div></div><p class="text-sm font-bold italic mb-6 px-4 leading-relaxed text-purple-200">"{{ shareData.quote }}"</p></div><div v-if="shareMode === 'card'" class="w-full flex flex-col items-center mb-6"><div class="bg-card w-full p-8 rounded-3xl border border-gray-600 shadow-2xl relative mb-4"><div class="absolute top-4 right-4 text-xs font-bold text-gray-500 uppercase">{{ shareData.date }}</div><div class="text-8xl font-black tracking-tighter text-white mb-2">{{ shareData.ticker }}</div><div class="text-4xl font-bold text-gray-400 mb-4">${{ shareData.price }}</div><div class="inline-block px-6 py-2 rounded-full text-xl font-black uppercase border-2 transform -rotate-6" :class="shareData.type === 'BUY' ? 'border-bullish text-bullish' : 'border-bearish text-bearish'">{{ shareData.type }}</div></div><p class="text-lg font-bold italic px-2 leading-relaxed text-purple-200">"{{ shareData.quote }}"</p></div><div class="mt-auto flex flex-col items-center bg-white/5 p-4 rounded-xl border border-white/10 w-full"><div id="share-qrcode" class="bg-white p-2 rounded-lg"></div><p class="text-[10px] mt-2 text-gray-400 uppercase tracking-widest">Scan to join</p></div></div></div>
+
+    <div id="share-capture-area" class="p-8 text-center text-white relative overflow-hidden">
+        <div class="absolute inset-0 opacity-20" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png');"></div>
+        <h1 class="text-6xl font-black italic tracking-tighter mb-4 relative z-10" style="text-shadow: 0 0 20px rgba(139,92,246,0.8);">VIBE<span class="text-primary">.</span></h1>
+        
+        <div class="w-full flex flex-col items-center relative z-10 flex-1">
+            
+            <div v-if="shareMode !== 'card'" class="w-full flex flex-col items-center">
+                <div class="w-28 h-28 rounded-full border-4 border-white/20 shadow-2xl mb-4 overflow-hidden bg-white">
+                    <img id="share-avatar" :src="shareData.avatar" class="w-full h-full object-cover" crossorigin="anonymous">
+                </div>
+                <h2 class="text-2xl font-bold mb-4">{{ shareData.title }}</h2>
+                <div class="w-full bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 shadow-lg mb-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center border-r border-white/10">
+                            <div class="text-3xl font-black text-bullish">{{ shareData.stat1 }}</div>
+                            <div class="text-[10px] uppercase tracking-widest text-gray-300">{{ shareData.label1 }}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-black text-bearish">{{ shareData.stat2 }}</div>
+                            <div class="text-[10px] uppercase tracking-widest text-gray-300">{{ shareData.label2 }}</div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-sm font-bold italic mb-6 px-4 leading-relaxed text-purple-200">"{{ shareData.quote }}"</p>
+            </div>
+
+            <div v-if="shareMode === 'card'" class="w-full flex flex-col items-center mb-6">
+                <div class="bg-card w-full p-8 rounded-3xl border border-gray-600 shadow-2xl relative mb-4">
+                    <div class="absolute top-4 right-4 text-xs font-bold text-gray-500 uppercase">{{ shareData.date }}</div>
+                    <div class="text-8xl font-black tracking-tighter text-white mb-2">{{ shareData.ticker }}</div>
+                    <div class="text-4xl font-bold text-gray-400 mb-4">${{ shareData.price }}</div>
+                    <div class="inline-block px-6 py-2 rounded-full text-xl font-black uppercase border-2 transform -rotate-6" :class="shareData.type === 'BUY' ? 'border-bullish text-bullish' : 'border-bearish text-bearish'">
+                        {{ shareData.type }}
+                    </div>
+                </div>
+                <p class="text-lg font-bold italic px-2 leading-relaxed text-purple-200">"{{ shareData.quote }}"</p>
+            </div>
+
+            <div class="mt-auto flex flex-col items-center bg-white/5 p-4 rounded-xl border border-white/10 w-full">
+                <div id="share-qrcode" class="bg-white p-2 rounded-lg"></div>
+                <p class="text-[10px] mt-2 text-gray-400 uppercase tracking-widest">Scan to join</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
     const { createApp, ref, computed, onMounted, watch } = Vue;
+
     // Keys
     const SUPABASE_URL = 'https://jgrxccshcsktxxhydvja.supabase.co'; 
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpncnhjY3NoY3NrdHh4aHlkdmphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU1MjY3MjEsImV4cCI6MjA4MTEwMjcyMX0.aV6nbrPdhf7oaqdQzLSQXfAots6_STkQ3_i-P0Pz13k';
     const FINNHUB_KEY = 'd4ttplhr01qk9ur8sgrgd4ttplhr01qk9ur8sgs0'; 
-    // Avatars
+    
+    // Custom Avatars
     const FEMALE_AVATAR = 'https://jgrxccshcsktxxhydvja.supabase.co/storage/v1/object/public/avatars/Female%20Avatar.jpg';
     const MALE_AVATAR = 'https://jgrxccshcsktxxhydvja.supabase.co/storage/v1/object/public/avatars/Male%20Avatar.jpg'; 
+    
     const POPULAR_STOCKS = ["NVDA", "TSLA", "AAPL", "AMD", "AMZN", "MSFT", "GOOGL", "META", "GME", "COIN", "PLTR", "HOOD", "RIVN", "NIO", "BABA", "MARA", "SMCI", "ARM", "AVGO", "SPY", "QQQ"];
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     createApp({
         setup() {
             const checkingSession = ref(true);
-            const currentView = ref('login'); // 🚀 Default to Login
+            const currentView = ref('login'); 
             const user = ref(null);
             const userProfile = ref({ username: '', avatar_url: null }); 
             const editingName = ref(false);
@@ -242,6 +382,7 @@
             const myHistory = ref([]);
             const email = ref('');
             const password = ref('');
+            const isSignUp = ref(false); 
             const cards = ref([]);
             const leaderboardTab = ref('hot'); 
             const topVibes = ref([]);
@@ -256,151 +397,216 @@
             const newTrade = ref({ price: '', shares: '', type: 'BUY', date: getToday() });
             const priceThreshold = ref(0.05);
 
-            // UI
+            // UI Logic
             const showAvatarMenu = ref(false);
             const fileInput = ref(null);
             const uploadingAvatar = ref(false);
-            const showPasswordChange = ref(false);
-            const newPassword = ref('');
-            const shareMode = ref('card');
+            
+            // Sharing Logic
+            const shareMode = ref('profile'); // profile, leaderboard, card
             const shareData = ref({});
 
-            const TEMP_AFFILIATE_LINK = 'https://www.moomoo.com/us'; 
-
-            const getAvatar = (seed) => { 
-                return `https://api.dicebear.com/7.x/thumbs/svg?seed=${seed}&backgroundColor=1e293b`;
-            };
-
-            // LOGIC: Unified Auth
-            const handleUnifiedAuth = async () => {
-                if (!email.value || !password.value) return alert("Please enter email and password.");
-                loading.value = true;
-                const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email: email.value, password: password.value });
-                if (!signInError) { loading.value = false; return; }
-                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email: email.value, password: password.value });
-                if (signUpError) {
-                    if (signUpError.message.includes("already registered") || signUpError.message.includes("exists")) alert("Incorrect password for existing account.");
-                    else alert("Error: " + signUpError.message);
-                } else {
-                    alert("Account created! Welcome to Vibe.");
-                    if (!signUpData.session) alert("Please check your email to confirm your account.");
-                }
-                loading.value = false;
-            };
-
-            const handleGoogleLogin = async () => {
-                const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href, queryParams: { prompt: 'select_account' } } });
-                if (error) alert("Login failed: " + error.message);
-            };
-
-            const changePassword = async () => {
-                if (!newPassword.value || newPassword.value.length < 6) return alert("Password too short.");
-                loading.value = true;
-                const { error } = await supabase.auth.updateUser({ password: newPassword.value });
-                if (error) alert(error.message); else { alert("Password updated!"); showPasswordChange.value = false; newPassword.value = ''; }
-                loading.value = false;
-            };
-
-            const handleLogout = async () => { 
-                await supabase.auth.signOut(); 
-                user.value = null; 
-                userProfile.value = {}; 
-                currentView.value = 'login'; 
-            };
-            
-            onMounted(async () => { 
-                fetchConfig(); 
-                const { data: { session } } = await supabase.auth.getSession(); 
-                
-                if (session) { 
-                    user.value = session.user; 
-                    currentView.value = 'swipe'; 
-                    await fetchProfile(); fetchTrades(); 
-                } 
-                // No else needed: default is already 'login'
-                
-                supabase.auth.onAuthStateChange(async (event, session) => { 
-                    if (session) { 
-                        user.value = session.user; 
-                        if (currentView.value === 'login') { 
-                            currentView.value = 'swipe'; await fetchProfile(); fetchTrades(); 
-                        } 
-                    } else { 
-                        user.value = null; 
-                        currentView.value = 'login'; 
-                    } 
-                }); 
-                checkingSession.value = false; 
+            const currentAvatarUrl = computed(() => {
+                if (userProfile.value.avatar_url) return userProfile.value.avatar_url;
+                return MALE_AVATAR; // Default
             });
 
-            const fetchProfile = async () => { if (!user.value) return; const { data } = await supabase.from('profiles').select('*').eq('id', user.value.id).single(); if (data) { userProfile.value = data; } else { const defaultName = 'Trader_' + user.value.id.substring(0,4); await supabase.from('profiles').upsert([{ id: user.value.id, username: defaultName }], { onConflict: 'id' }); userProfile.value = { username: defaultName }; } };
-            const toggleEditName = async () => { if (editingName.value) { if (editUsernameInput.value && editUsernameInput.value !== userProfile.value.username) { const { error } = await supabase.from('profiles').update({ username: editUsernameInput.value }).eq('id', user.value.id); if (!error) userProfile.value.username = editUsernameInput.value; } editingName.value = false; } else { editUsernameInput.value = userProfile.value.username; editingName.value = true; } };
-            const setPresetAvatar = async (url) => { const { error } = await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.value.id); if (!error) { userProfile.value.avatar_url = url; showAvatarMenu.value = false; } };
+            const getAvatar = (url, seed) => {
+                if (url) return url;
+                return `https://api.dicebear.com/7.x/micah/svg?seed=${seed || 'default'}&backgroundColor=e2e8f0`;
+            };
+
+            const handleAuth = async () => {
+                if (!email.value || !password.value) return alert("Fill in email and password!");
+                loading.value = true;
+                let error = null;
+                if (isSignUp.value) {
+                    const res = await supabase.auth.signUp({ email: email.value, password: password.value });
+                    error = res.error;
+                } else {
+                    const res = await supabase.auth.signInWithPassword({ email: email.value, password: password.value });
+                    error = res.error;
+                }
+                if (error) alert(error.message);
+                loading.value = false;
+            };
+
+            const handleLogout = async () => { await supabase.auth.signOut(); user.value = null; userProfile.value = {}; currentView.value = 'login'; };
+
+            onMounted(async () => {
+                fetchConfig();
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) { user.value = session.user; currentView.value = 'swipe'; await fetchProfile(); fetchTrades(); } else { currentView.value = 'login'; }
+                supabase.auth.onAuthStateChange(async (_event, session) => {
+                    if (session) { user.value = session.user; if (currentView.value === 'login') { currentView.value = 'swipe'; await fetchProfile(); fetchTrades(); } } else { user.value = null; currentView.value = 'login'; }
+                });
+                checkingSession.value = false;
+            });
+
+            const fetchProfile = async () => {
+                if (!user.value) return;
+                const { data } = await supabase.from('profiles').select('*').eq('id', user.value.id).single();
+                if (data) { userProfile.value = data; } else {
+                    const defaultName = 'Trader_' + user.value.id.substring(0,4);
+                    await supabase.from('profiles').upsert([{ id: user.value.id, username: defaultName }], { onConflict: 'id' });
+                    userProfile.value = { username: defaultName };
+                }
+            };
+
+            const toggleEditName = async () => {
+                if (editingName.value) {
+                    if (editUsernameInput.value && editUsernameInput.value !== userProfile.value.username) {
+                        const { error } = await supabase.from('profiles').update({ username: editUsernameInput.value }).eq('id', user.value.id);
+                        if (!error) userProfile.value.username = editUsernameInput.value;
+                    }
+                    editingName.value = false;
+                } else {
+                    editUsernameInput.value = userProfile.value.username;
+                    editingName.value = true;
+                }
+            };
+
+            const setPresetAvatar = async (url) => {
+                const { error } = await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.value.id);
+                if (!error) { userProfile.value.avatar_url = url; showAvatarMenu.value = false; }
+            };
+
             const triggerFileUpload = () => { fileInput.value.click(); };
-            const handleFileUpload = async (event) => { const file = event.target.files[0]; if (!file) return; uploadingAvatar.value = true; const fileExt = file.name.split('.').pop(); const fileName = `${user.value.id}-${Date.now()}.${fileExt}`; const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file); if (uploadError) { alert("Upload failed: " + uploadError.message); uploadingAvatar.value = false; return; } const { data } = supabase.storage.from('avatars').getPublicUrl(fileName); const { error: updateError } = await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', user.value.id); if (!updateError) { userProfile.value.avatar_url = data.publicUrl; showAvatarMenu.value = false; } uploadingAvatar.value = false; };
+            const handleFileUpload = async (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                uploadingAvatar.value = true;
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${user.value.id}-${Date.now()}.${fileExt}`;
+                const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file);
+                if (uploadError) { alert("Upload failed: " + uploadError.message); uploadingAvatar.value = false; return; }
+                const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+                const { error: updateError } = await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', user.value.id);
+                if (!updateError) { userProfile.value.avatar_url = data.publicUrl; showAvatarMenu.value = false; }
+                uploadingAvatar.value = false;
+            };
+
             const fetchMyHistory = async () => { if (!user.value) return; const { data } = await supabase.from('trades').select('*').eq('user_id', user.value.id).order('created_at', { ascending: false }); if (data) myHistory.value = data; };
             const deleteTrade = async (id) => { if (!confirm("Delete?")) return; await supabase.from('trades').delete().eq('id', id); myHistory.value = myHistory.value.filter(t => t.id !== id); fetchTrades(); };
+
             const filterStocks = () => { const query = tickerInput.value.toUpperCase(); if (!query) { filteredStocks.value = []; return; } filteredStocks.value = POPULAR_STOCKS.filter(s => s.startsWith(query)).slice(0, 6); showSuggestions.value = true; };
             const selectStock = (stock) => { tickerInput.value = stock; showSuggestions.value = false; };
             const fetchConfig = async () => { const { data } = await supabase.from('app_config').select('value').eq('key', 'price_threshold').single(); if (data) priceThreshold.value = data.value; };
             const formatDate = (dateString) => { if (!dateString) return ''; const options = { month: 'short', day: 'numeric' }; return new Date(dateString).toLocaleDateString('en-US', options); };
-            const fetchSafeData = async (queryPromise) => { const { data, error } = await queryPromise; if (!error) return data.map(item => ({ ...item, username: item.profiles ? item.profiles.username : null, avatar_url: item.profiles ? item.profiles.avatar_url : null })); else { const fallback = await supabase.from('trades').select('*').order('likes', {ascending: false}).limit(100); return fallback.data || []; } };
-            
+
+            const fetchSafeData = async (queryPromise) => {
+                const { data, error } = await queryPromise;
+                if (!error) return data.map(item => ({ ...item, username: item.profiles ? item.profiles.username : null, avatar_url: item.profiles ? item.profiles.avatar_url : null }));
+                else { const fallback = await supabase.from('trades').select('*').order('likes', {ascending: false}).limit(100); return fallback.data || []; }
+            };
+
             const fetchTrades = async () => { 
-                if (!user.value) return; 
+                if (!user.value) return; loading.value = true; 
+                const { data: mySwipes } = await supabase.from('swipes').select('trade_id').eq('user_id', user.value.id);
+                const swipedIds = mySwipes ? mySwipes.map(s => s.trade_id) : [];
+                let rawData = await fetchSafeData(supabase.from('trades').select('*, profiles(username, avatar_url)').order('trade_date', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }).limit(100));
+                cards.value = rawData.filter(t => !swipedIds.includes(t.id)); loading.value = false; 
+            };
+            
+            const fetchLeaderboard = async () => { 
                 loading.value = true; 
-                const { data: mySwipes } = await supabase.from('swipes').select('trade_id').eq('user_id', user.value.id); 
-                const swipedIds = mySwipes ? mySwipes.map(s => s.trade_id) : []; 
-                let rawData = await fetchSafeData(supabase.from('trades').select('*, profiles(username, avatar_url)').order('trade_date', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }).limit(100)); 
-                const cleanData = rawData.filter(t => !swipedIds.includes(t.id));
-                const mixedCards = [];
-                cleanData.forEach((trade, index) => {
-                    mixedCards.push(trade);
-                    if ((index + 1) % 5 === 0) {
-                        mixedCards.push({
-                            id: `ad-${index}`,
-                            isAd: true,
-                            ticker: 'PROMO',
-                            price: 'FREE',
-                            shares: 1000,
-                            title: 'Claim Your Free Stock',
-                            verified: true
-                        });
-                    }
-                });
-                cards.value = mixedCards; 
+                topVibes.value = await fetchSafeData(supabase.from('trades').select('*, profiles(username, avatar_url)').order('likes', { ascending: false }).limit(100));
+                coldVibes.value = await fetchSafeData(supabase.from('trades').select('*, profiles(username, avatar_url)').order('dislikes', { ascending: false }).limit(100));
                 loading.value = false; 
             };
 
-            const calculateRatio = (t) => { const total = (t.likes || 0) + (t.dislikes || 0); if (total === 0) return 0; return Math.round((t.likes / total) * 100); };
-            const fetchLeaderboard = async () => { loading.value = true; const hotPool = await fetchSafeData(supabase.from('trades').select('*, profiles(username, avatar_url)').order('likes', { ascending: false }).limit(50)); const coldPool = await fetchSafeData(supabase.from('trades').select('*, profiles(username, avatar_url)').order('dislikes', { ascending: false }).limit(50)); const all = [...new Map([...hotPool, ...coldPool].map(v => [v.id, v])).values()]; topVibes.value = [...all].sort((a, b) => calculateRatio(b) - calculateRatio(a)).slice(0, 50); coldVibes.value = [...all].filter(t => (t.likes + t.dislikes) > 0).sort((a, b) => calculateRatio(a) - calculateRatio(b)).slice(0, 50); loading.value = false; };
-            const generateQRCode = () => { const container = document.getElementById('share-qrcode'); container.innerHTML = ''; new QRCode(container, { text: window.location.href, width: 80, height: 80, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H }); };
-            const triggerShareCapture = async (fileName) => { generateQRCode(); await new Promise(r => setTimeout(r, 100)); const el = document.getElementById('share-capture-area'); const canvas = await html2canvas(el, { useCORS: true, backgroundColor: null, scale: 2 }); canvas.toBlob(async (blob) => { if (!blob) return alert("Image generation failed"); const file = new File([blob], fileName, { type: "image/png" }); if (navigator.share) { try { await navigator.share({ files: [file], title: 'Vibe Share', text: 'Join the flow!' }); } catch (err) {} } else { const link = document.createElement('a'); link.download = fileName; link.href = canvas.toDataURL(); link.click(); alert("Image saved to photos!"); } }, 'image/png'); };
-            const shareProfile = () => { shareMode.value = 'profile'; const total = myHistory.value.length; const buys = myHistory.value.filter(t => t.type === 'BUY').length; shareData.value = { avatar: currentAvatarUrl.value, title: userProfile.value.username || 'Trader', stat1: buys, label1: 'Bullish', stat2: total - buys, label2: 'Bearish', quote: "Diamond Hands or Paper Hands? I'm calling the market moves on Vibe! Check my track record and see if you can beat me." }; setTimeout(() => triggerShareCapture('vibe-profile.png'), 50); };
-            const shareLeaderboard = () => { shareMode.value = 'profile'; const list = leaderboardTab.value === 'hot' ? topVibes.value : coldVibes.value; const top1 = list[0] || { likes: 0, dislikes: 0 }; shareData.value = { avatar: 'https://api.dicebear.com/7.x/shapes/svg?seed=Vibe', title: leaderboardTab.value === 'hot' ? 'Diamond Hands' : 'Paper Hands', stat1: top1.likes || 0, label1: 'Top Likes', stat2: top1.dislikes || 0, label2: 'Top Rejects', quote: "Market Movers Alert. The official Diamond vs Paper list is out. Are you holding any of these?" }; setTimeout(() => triggerShareCapture('vibe-leaderboard.png'), 50); };
-            const shareCard = (card) => { shareMode.value = 'card'; const sentiment = card.type === 'BUY' ? 'UP' : 'DOWN'; shareData.value = { ticker: card.ticker, price: card.price, type: card.type, date: formatDate(card.trade_date), quote: `Bull or Bear? I say $${card.ticker} is going ${sentiment}. Who's with me? Cast your vote on Vibe now.` }; setTimeout(() => triggerShareCapture(`vibe-${card.ticker}.png`), 50); };
-            const submitTrade = async () => { if (!tickerInput.value || !newTrade.value.price || !newTrade.value.shares || !newTrade.value.date) return alert("All fields required"); submitting.value = true; validating.value = true; let isVerified = true; let sector = null; let city = null; let country = null; const ticker = tickerInput.value.toUpperCase(); const inputPrice = parseFloat(newTrade.value.price); const inputDate = newTrade.value.date; const today = getToday(); if (FINNHUB_KEY) { try { let marketPrice = null; if (inputDate === today) { const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_KEY}`); const data = await res.json(); if (data && data.c) marketPrice = data.c; } else { const ts = Math.floor(new Date(inputDate).getTime() / 1000); const res = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${ticker}&resolution=D&from=${ts}&to=${ts + 86400}&token=${FINNHUB_KEY}`); const data = await res.json(); if (data && data.c && data.c.length > 0) marketPrice = data.c[0]; } if (marketPrice) { const diff = Math.abs(marketPrice - inputPrice) / marketPrice; if (diff > priceThreshold.value) isVerified = false; } const profRes = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${FINNHUB_KEY}`); const profData = await profRes.json(); if (profData && profData.finnhubIndustry) sector = profData.finnhubIndustry; } catch (e) { console.log("API error", e); } } try { const ipRes = await fetch('https://ipapi.co/json/'); const ipData = await ipRes.json(); if (ipData.city) city = ipData.city; if (ipData.country_code) country = ipData.country_code; } catch (e) {} validating.value = false; const { error } = await supabase.from('trades').insert([{ ticker, price: inputPrice, shares: parseFloat(newTrade.value.shares), type: newTrade.value.type, verified: isVerified, user_id: user.value.id, sector, city, country, likes: 0, dislikes: 0, trade_date: inputDate }]); if (!error) { alert(isVerified ? "Posted! ✅" : "Posted! (⚠️ Price Divergence)"); tickerInput.value = ''; newTrade.value = { price: '', shares: '', type: 'BUY', date: getToday() }; currentView.value = 'swipe'; fetchTrades(); fetchMyHistory(); } else { alert("Error: " + error.message); } submitting.value = false; };
-            
-            const swipe = async (direction) => { 
-                if (cards.value.length === 0) return; 
-                const card = cards.value[0]; 
-                
-                if (card.isAd) {
-                    window.open(TEMP_AFFILIATE_LINK, '_blank'); 
-                    const el = document.querySelector('.trade-card'); 
-                    el.classList.add(direction === 'left' ? 'swipe-left' : 'swipe-right'); 
-                    setTimeout(() => { cards.value.shift(); el.classList.remove('swipe-left', 'swipe-right'); }, 300);
-                    return; 
-                }
-
-                const el = document.querySelector('.trade-card'); 
-                el.classList.add(direction === 'left' ? 'swipe-left' : 'swipe-right'); 
-                await supabase.from('swipes').insert([{ user_id: user.value.id, trade_id: card.id, direction: direction === 'right' ? 'LIKE' : 'NOPE' }]); 
-                setTimeout(async () => { cards.value.shift(); el.classList.remove('swipe-left', 'swipe-right'); }, 300); 
-                if (direction === 'right') await supabase.from('trades').update({ likes: card.likes + 1 }).eq('id', card.id); 
-                else await supabase.from('trades').update({ dislikes: card.dislikes + 1 }).eq('id', card.id); 
+            // 🔥 SHARE LOGIC (Core v1.2)
+            const generateQRCode = () => {
+                const container = document.getElementById('share-qrcode');
+                container.innerHTML = '';
+                new QRCode(container, { text: window.location.href, width: 80, height: 80, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H });
             };
 
+            const triggerShareCapture = async (fileName) => {
+                generateQRCode();
+                await new Promise(r => setTimeout(r, 100)); // Wait for render
+                const el = document.getElementById('share-capture-area');
+                const canvas = await html2canvas(el, { useCORS: true, backgroundColor: null, scale: 2 });
+                canvas.toBlob(async (blob) => {
+                    if (!blob) return alert("Image generation failed");
+                    const file = new File([blob], fileName, { type: "image/png" });
+                    if (navigator.share) {
+                        try { await navigator.share({ files: [file], title: 'Vibe Share', text: 'Join the flow!' }); } catch (err) {}
+                    } else {
+                        const link = document.createElement('a'); link.download = fileName; link.href = canvas.toDataURL(); link.click();
+                        alert("Image saved to photos!");
+                    }
+                }, 'image/png');
+            };
+
+            // 🟢 Profile Share (Scenario A - No Emoji)
+            const shareProfile = () => {
+                shareMode.value = 'profile';
+                const total = myHistory.value.length;
+                const buys = myHistory.value.filter(t => t.type === 'BUY').length;
+                shareData.value = {
+                    avatar: currentAvatarUrl.value,
+                    title: userProfile.value.username || 'Trader',
+                    stat1: buys, label1: 'Bullish',
+                    stat2: total - buys, label2: 'Bearish',
+                    quote: "Diamond Hands or Paper Hands? I'm calling the market moves on Vibe! Check my track record and see if you can beat me."
+                };
+                setTimeout(() => triggerShareCapture('vibe-profile.png'), 50);
+            };
+
+            // 🔴 Leaderboard Share (Scenario C - No Emoji)
+            const shareLeaderboard = () => {
+                shareMode.value = 'profile'; // Reuse profile layout for leaderboard summary
+                const list = leaderboardTab.value === 'hot' ? topVibes.value : coldVibes.value;
+                const top1 = list[0] || { likes: 0, dislikes: 0 };
+                shareData.value = {
+                    avatar: 'https://api.dicebear.com/7.x/shapes/svg?seed=Vibe', // Logo placeholder
+                    title: leaderboardTab.value === 'hot' ? 'Diamond Hands' : 'Paper Hands',
+                    stat1: top1.likes || 0, label1: 'Top Likes',
+                    stat2: top1.dislikes || 0, label2: 'Top Rejects',
+                    quote: "Market Movers Alert. The official Diamond vs Paper list is out. Are you holding any of these?"
+                };
+                setTimeout(() => triggerShareCapture('vibe-leaderboard.png'), 50);
+            };
+
+            // 🔵 Card Share (Scenario B - No Emoji)
+            const shareCard = (card) => {
+                shareMode.value = 'card';
+                const sentiment = card.type === 'BUY' ? 'UP' : 'DOWN';
+                shareData.value = {
+                    ticker: card.ticker,
+                    price: card.price,
+                    type: card.type,
+                    date: formatDate(card.trade_date),
+                    quote: `Bull or Bear? I say $${card.ticker} is going ${sentiment}. Who's with me? Cast your vote on Vibe now.`
+                };
+                setTimeout(() => triggerShareCapture(`vibe-${card.ticker}.png`), 50);
+            };
+
+            const submitTrade = async () => {
+                if (!tickerInput.value || !newTrade.value.price || !newTrade.value.shares || !newTrade.value.date) return alert("All fields required");
+                submitting.value = true; validating.value = true;
+                let isVerified = true; let sector = null; let city = null; let country = null;
+                const ticker = tickerInput.value.toUpperCase(); const inputPrice = parseFloat(newTrade.value.price); const inputDate = newTrade.value.date; const today = getToday();
+
+                if (FINNHUB_KEY) {
+                    try {
+                        let marketPrice = null;
+                        if (inputDate === today) { const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_KEY}`); const data = await res.json(); if (data && data.c) marketPrice = data.c; } 
+                        else { const ts = Math.floor(new Date(inputDate).getTime() / 1000); const res = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${ticker}&resolution=D&from=${ts}&to=${ts + 86400}&token=${FINNHUB_KEY}`); const data = await res.json(); if (data && data.c && data.c.length > 0) marketPrice = data.c[0]; }
+                        if (marketPrice) { const diff = Math.abs(marketPrice - inputPrice) / marketPrice; if (diff > priceThreshold.value) isVerified = false; }
+                        const profRes = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${FINNHUB_KEY}`); const profData = await profRes.json(); if (profData && profData.finnhubIndustry) sector = profData.finnhubIndustry;
+                    } catch (e) { console.log("API error", e); }
+                }
+                try { const ipRes = await fetch('https://ipapi.co/json/'); const ipData = await ipRes.json(); if (ipData.city) city = ipData.city; if (ipData.country_code) country = ipData.country_code; } catch (e) {}
+                validating.value = false;
+                const { error } = await supabase.from('trades').insert([{ ticker, price: inputPrice, shares: parseFloat(newTrade.value.shares), type: newTrade.value.type, verified: isVerified, user_id: user.value.id, sector, city, country, likes: 0, dislikes: 0, trade_date: inputDate }]);
+                if (!error) { alert(isVerified ? "Posted! ✅" : "Posted! (⚠️ Price Divergence)"); tickerInput.value = ''; newTrade.value = { price: '', shares: '', type: 'BUY', date: getToday() }; currentView.value = 'swipe'; fetchTrades(); fetchMyHistory(); } 
+                else { alert("Error: " + error.message); }
+                submitting.value = false;
+            };
+
+            const swipe = async (direction) => { if (cards.value.length === 0) return; const card = cards.value[0]; const el = document.querySelector('.trade-card'); el.classList.add(direction === 'left' ? 'swipe-left' : 'swipe-right'); await supabase.from('swipes').insert([{ user_id: user.value.id, trade_id: card.id, direction: direction === 'right' ? 'LIKE' : 'NOPE' }]); setTimeout(async () => { cards.value.shift(); el.classList.remove('swipe-left', 'swipe-right'); }, 300); if (direction === 'right') await supabase.from('trades').update({ likes: card.likes + 1 }).eq('id', card.id); else await supabase.from('trades').update({ dislikes: card.dislikes + 1 }).eq('id', card.id); };
             const startX = ref(0); const currentX = ref(0); const isDragging = ref(false); const swipeThreshold = 100;
             const currentTransform = computed(() => isDragging.value ? `translateX(${currentX.value}px) rotate(${currentX.value * 0.05}deg)` : '');
             const swipeStatus = computed(() => currentX.value > 50 ? 'LIKE' : currentX.value < -50 ? 'NOPE' : null);
@@ -408,13 +614,15 @@
             const startDrag = (e) => { isDragging.value = true; startX.value = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; };
             const onDrag = (e) => { if (!isDragging.value) return; currentX.value = (e.type.includes('mouse') ? e.clientX : e.touches[0].clientX) - startX.value; };
             const endDrag = () => { isDragging.value = false; if (Math.abs(currentX.value) > swipeThreshold) swipe(currentX.value > 0 ? 'right' : 'left'); else currentX.value = 0; };
-            const currentAvatarUrl = computed(() => userProfile.value?.avatar_url || getAvatar(userProfile.value?.username || 'user')); 
-
-            watch(currentView, (newVal) => { if (newVal === 'leaderboard') fetchLeaderboard(); if (newVal === 'swipe') fetchTrades(); if (newVal === 'profile') fetchMyHistory(); });
             
-            return { currentView, isAuthView, checkingSession, cards, newTrade, loading, submitting, validating, tickerInput, showSuggestions, filteredStocks, email, password, displayedCards, swipe, currentTransform, swipeStatus, startDrag, onDrag, endDrag, submitTrade, fetchTrades, filterStocks, selectStock, handleUnifiedAuth, handleLogout, leaderboardTab, topVibes, coldVibes, formatDate, user, userProfile, editingName, editUsernameInput, toggleEditName, myHistory, deleteTrade, shareLeaderboard, shareProfile, shareCard, fileInput, uploadingAvatar, triggerFileUpload, handleFileUpload, setPresetAvatar, currentAvatarUrl, getAvatar, showAvatarMenu, MALE_AVATAR, FEMALE_AVATAR, shareMode, shareData, handleGoogleLogin, calculateRatio, showPasswordChange, newPassword, changePassword };
+            watch(currentView, (newVal) => { if (newVal === 'leaderboard') fetchLeaderboard(); if (newVal === 'swipe') fetchTrades(); if (newVal === 'profile') fetchMyHistory(); });
+
+            return { 
+                currentView, checkingSession, cards, newTrade, loading, submitting, validating, tickerInput, showSuggestions, filteredStocks, email, password, isSignUp, displayedCards, swipe, currentTransform, swipeStatus, startDrag, onDrag, endDrag, submitTrade, fetchTrades, filterStocks, selectStock, handleAuth, handleLogout, leaderboardTab, topVibes, coldVibes, formatDate, user, userProfile, editingName, editUsernameInput, toggleEditName, myHistory, deleteTrade, shareLeaderboard, shareProfile, shareCard, fileInput, uploadingAvatar, triggerFileUpload, handleFileUpload, setPresetAvatar, currentAvatarUrl, getAvatar, showAvatarMenu, MALE_AVATAR, FEMALE_AVATAR, shareMode, shareData
+            };
         }
     }).mount('#app');
 </script>
+
 </body>
 </html>
