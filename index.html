@@ -51,8 +51,6 @@
         .rugged-v { font-family: 'Black Ops One', cursive; font-size: 1.2em; vertical-align: middle; margin-right: -2px; display: inline-block; transform: scaleY(1.1); }
         #share-capture-area { position: fixed; top: -9999px; left: -9999px; width: 375px; min-height: 750px; background: radial-gradient(circle at top right, #4c1d95 0%, #0f172a 70%); z-index: 9999; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .ad-card-bg { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); border: 1px solid #4f46e5; }
-        
-        /* ✨ Landing Page Styles */
         .landing-hero { background: radial-gradient(circle at 50% 0%, #4c1d95 0%, #0f172a 70%); min-height: 100vh; }
         .feature-icon { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 16px; font-size: 24px; margin-bottom: 16px; }
     </style>
@@ -68,7 +66,7 @@
         </nav>
 
         <div class="flex flex-col items-center text-center px-6 pt-10 pb-20 max-w-4xl mx-auto">
-            <div class="inline-block px-4 py-1.5 rounded-full bg-primary/20 border border-primary/40 text-primary text-xs font-bold uppercase tracking-widest mb-6 animate-fade-in-up">v2.4 Live Now</div>
+            <div class="inline-block px-4 py-1.5 rounded-full bg-primary/20 border border-primary/40 text-primary text-xs font-bold uppercase tracking-widest mb-6 animate-fade-in-up">v4.1 Clean</div>
             <h1 class="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-tight animate-fade-in-up" style="animation-delay: 0.1s;">
                 Swipe Your Way <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">To Profit.</span>
             </h1>
@@ -127,6 +125,7 @@
     </div>
 
     <div v-else class="flex-1 flex flex-col max-w-md mx-auto w-full relative overflow-hidden h-[100dvh]">
+        
         <div v-if="checkingSession" class="flex-1 flex flex-col items-center justify-center bg-dark z-50">
             <h1 class="text-4xl font-black italic tracking-tighter logo-glow mb-4 animate-pulse"><span class="rugged-v text-5xl">V</span>IBE<span class="text-primary">.</span></h1>
             <i class="fas fa-circle-notch fa-spin text-primary text-2xl"></i>
@@ -145,29 +144,12 @@
                 <div class="relative py-2"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-600"></div></div><div class="relative flex justify-center text-xs uppercase"><span class="bg-transparent px-2 text-gray-400 font-bold backdrop-blur-sm">Or with Email</span></div></div>
                 <input v-model="email" type="email" placeholder="Email address" class="w-full bg-dark/60 border border-gray-600 rounded-xl p-4 text-white outline-none focus:border-primary transition">
                 <input v-model="password" type="password" placeholder="Password (min 6 chars)" class="w-full bg-dark/60 border border-gray-600 rounded-xl p-4 text-white outline-none focus:border-primary transition" @keyup.enter="handleUnifiedAuth">
-                <div class="text-right"><button @click="currentView = 'forgot-password'" class="text-xs text-gray-400 hover:text-white transition">Forgot Password?</button></div>
+                
                 <button @click="handleUnifiedAuth" :disabled="loading" class="w-full bg-primary hover:bg-violet-600 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-primary/20 flex justify-center items-center mt-2 active:scale-95">
                     <span v-if="loading"><i class="fas fa-circle-notch fa-spin mr-2"></i> Connecting...</span><span v-else>Continue <i class="fas fa-arrow-right ml-2"></i></span>
                 </button>
             </div>
             <p class="text-[10px] text-gray-500 mt-8 mb-4">New account? We'll create one automatically.</p>
-        </div>
-
-        <div v-else-if="currentView === 'forgot-password'" class="flex-1 flex flex-col justify-center px-8 text-center animate-fade-in">
-            <div class="mb-8"><h2 class="text-3xl font-black italic tracking-tighter mb-2">Reset Password</h2><p class="text-gray-400 text-sm">Enter your email to receive a magic link.</p></div>
-            <div class="space-y-4 bg-card/40 p-6 rounded-3xl backdrop-blur-md border border-white/10 shadow-2xl">
-                <input v-model="email" type="email" placeholder="Email address" class="w-full bg-dark/60 border border-gray-600 rounded-xl p-4 text-white outline-none focus:border-primary transition">
-                <button @click="handlePasswordReset" :disabled="loading" class="w-full bg-primary hover:bg-violet-600 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-primary/20 flex justify-center items-center active:scale-95"><span v-if="loading"><i class="fas fa-circle-notch fa-spin mr-2"></i> Sending...</span><span v-else>Send Reset Link</span></button>
-                <button @click="currentView = 'login'" class="w-full py-2 text-gray-400 font-bold text-sm hover:text-white transition mt-2">Back to Login</button>
-            </div>
-        </div>
-
-        <div v-if="showRecoveryModal" class="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-6 backdrop-blur-sm">
-            <div class="bg-card w-full max-w-sm p-6 rounded-3xl border border-primary shadow-2xl animate-pop-in">
-                <h2 class="text-2xl font-black italic tracking-tighter mb-2 text-center text-white">Set New Password</h2>
-                <input v-model="newPassword" type="password" placeholder="New Password (min 6 chars)" class="w-full bg-dark border border-gray-600 rounded-xl p-4 text-white outline-none focus:border-primary mb-4">
-                <button @click="finalizePasswordReset" :disabled="loading" class="w-full bg-primary hover:bg-violet-600 text-white font-bold py-4 rounded-xl transition shadow-lg flex justify-center items-center"><span v-if="loading"><i class="fas fa-circle-notch fa-spin mr-2"></i> Updating...</span><span v-else>Save Password</span></button>
-            </div>
         </div>
 
         <template v-else-if="currentView === 'swipe' || currentView === 'post' || currentView === 'leaderboard' || currentView === 'profile'">
@@ -313,11 +295,9 @@
 
 <script>
     const { createApp, ref, computed, onMounted, watch } = Vue;
-    // Keys
     const SUPABASE_URL = 'https://jgrxccshcsktxxhydvja.supabase.co'; 
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpncnhjY3NoY3NrdHh4aHlkdmphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU1MjY3MjEsImV4cCI6MjA4MTEwMjcyMX0.aV6nbrPdhf7oaqdQzLSQXfAots6_STkQ3_i-P0Pz13k';
     const FINNHUB_KEY = 'd4ttplhr01qk9ur8sgrgd4ttplhr01qk9ur8sgs0'; 
-    // Avatars
     const FEMALE_AVATAR = 'https://jgrxccshcsktxxhydvja.supabase.co/storage/v1/object/public/avatars/Female%20Avatar.jpg';
     const MALE_AVATAR = 'https://jgrxccshcsktxxhydvja.supabase.co/storage/v1/object/public/avatars/Male%20Avatar.jpg'; 
     const POPULAR_STOCKS = ["NVDA", "TSLA", "AAPL", "AMD", "AMZN", "MSFT", "GOOGL", "META", "GME", "COIN", "PLTR", "HOOD", "RIVN", "NIO", "BABA", "MARA", "SMCI", "ARM", "AVGO", "SPY", "QQQ"];
@@ -326,7 +306,7 @@
     createApp({
         setup() {
             const checkingSession = ref(true);
-            const currentView = ref('landing'); // Default to LANDING page
+            const currentView = ref('landing'); // Default to LANDING
             const user = ref(null);
             const userProfile = ref({ username: '', avatar_url: null }); 
             const editingName = ref(false);
@@ -354,12 +334,9 @@
             const uploadingAvatar = ref(false);
             const showPasswordChange = ref(false);
             const newPassword = ref('');
-            const showRecoveryModal = ref(false);
-            
-            // Computed to check if we are in auth flow (login/forgot password)
-            const isAuthView = computed(() => currentView.value === 'login' || currentView.value === 'forgot-password');
+            // 🔥 REMOVED: showRecoveryModal
 
-            // 🔥 AD LINK
+            const isAuthView = computed(() => currentView.value === 'login');
             const TEMP_AFFILIATE_LINK = 'https://www.moomoo.com/us'; 
 
             // LOGIC: Unified Auth
@@ -384,23 +361,7 @@
                 if (error) alert("Login failed: " + error.message);
             };
 
-            const handlePasswordReset = async () => {
-                if (!email.value) return alert("Please enter your email.");
-                loading.value = true;
-                const { error } = await supabase.auth.resetPasswordForEmail(email.value, { redirectTo: window.location.href });
-                if (error) alert("Error: " + error.message);
-                else alert("Check your email for the reset link!");
-                loading.value = false;
-            };
-
-            const finalizePasswordReset = async () => {
-                if (!newPassword.value || newPassword.value.length < 6) return alert("Password too short.");
-                loading.value = true;
-                const { error } = await supabase.auth.updateUser({ password: newPassword.value });
-                if (error) alert(error.message);
-                else { alert("Password updated!"); showRecoveryModal.value = false; newPassword.value = ''; currentView.value = 'swipe'; await fetchProfile(); fetchTrades(); }
-                loading.value = false;
-            };
+            // 🔥 REMOVED: handlePasswordReset, finalizePasswordReset
 
             const changePassword = async () => {
                 if (!newPassword.value || newPassword.value.length < 6) return alert("Password too short.");
@@ -411,27 +372,25 @@
             };
 
             const handleLogout = async () => { await supabase.auth.signOut(); user.value = null; userProfile.value = {}; currentView.value = 'landing'; };
+            
             onMounted(async () => { 
                 fetchConfig(); 
                 const { data: { session } } = await supabase.auth.getSession(); 
-                if (window.location.hash && window.location.hash.includes('type=recovery')) { showRecoveryModal.value = true; } 
                 
                 if (session) { 
                     user.value = session.user; 
-                    if(!showRecoveryModal.value) currentView.value = 'swipe'; 
+                    currentView.value = 'swipe'; 
                     await fetchProfile(); fetchTrades(); 
                 } else { 
-                    // ⚠️ 如果没登录，停留在 landing page，不再自动跳转 login
-                    if (currentView.value !== 'login' && currentView.value !== 'forgot-password') {
+                    if (currentView.value !== 'login') {
                         currentView.value = 'landing';
                     }
                 } 
                 
                 supabase.auth.onAuthStateChange(async (event, session) => { 
-                    if (event === 'PASSWORD_RECOVERY') { showRecoveryModal.value = true; } 
                     if (session) { 
                         user.value = session.user; 
-                        if (['landing', 'login', 'forgot-password'].includes(currentView.value)) { 
+                        if (['landing', 'login'].includes(currentView.value)) { 
                             currentView.value = 'swipe'; await fetchProfile(); fetchTrades(); 
                         } 
                     } else { 
@@ -442,6 +401,7 @@
                 checkingSession.value = false; 
             });
 
+            // ... (Rest of App Logic) ...
             const fetchProfile = async () => { if (!user.value) return; const { data } = await supabase.from('profiles').select('*').eq('id', user.value.id).single(); if (data) { userProfile.value = data; } else { const defaultName = 'Trader_' + user.value.id.substring(0,4); await supabase.from('profiles').upsert([{ id: user.value.id, username: defaultName }], { onConflict: 'id' }); userProfile.value = { username: defaultName }; } };
             const toggleEditName = async () => { if (editingName.value) { if (editUsernameInput.value && editUsernameInput.value !== userProfile.value.username) { const { error } = await supabase.from('profiles').update({ username: editUsernameInput.value }).eq('id', user.value.id); if (!error) userProfile.value.username = editUsernameInput.value; } editingName.value = false; } else { editUsernameInput.value = userProfile.value.username; editingName.value = true; } };
             const setPresetAvatar = async (url) => { const { error } = await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.value.id); if (!error) { userProfile.value.avatar_url = url; showAvatarMenu.value = false; } };
@@ -455,7 +415,6 @@
             const formatDate = (dateString) => { if (!dateString) return ''; const options = { month: 'short', day: 'numeric' }; return new Date(dateString).toLocaleDateString('en-US', options); };
             const fetchSafeData = async (queryPromise) => { const { data, error } = await queryPromise; if (!error) return data.map(item => ({ ...item, username: item.profiles ? item.profiles.username : null, avatar_url: item.profiles ? item.profiles.avatar_url : null })); else { const fallback = await supabase.from('trades').select('*').order('likes', {ascending: false}).limit(100); return fallback.data || []; } };
             
-            // 🔥 FETCH TRADES + AD INJECTION (每5张插入一个假广告测试)
             const fetchTrades = async () => { 
                 if (!user.value) return; 
                 loading.value = true; 
@@ -463,8 +422,6 @@
                 const swipedIds = mySwipes ? mySwipes.map(s => s.trade_id) : []; 
                 let rawData = await fetchSafeData(supabase.from('trades').select('*, profiles(username, avatar_url)').order('trade_date', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }).limit(100)); 
                 const cleanData = rawData.filter(t => !swipedIds.includes(t.id));
-                
-                // INJECT ADS EVERY 5 CARDS
                 const mixedCards = [];
                 cleanData.forEach((trade, index) => {
                     mixedCards.push(trade);
@@ -480,7 +437,6 @@
                         });
                     }
                 });
-                
                 cards.value = mixedCards; 
                 loading.value = false; 
             };
@@ -494,21 +450,18 @@
             const shareCard = (card) => { shareMode.value = 'card'; const sentiment = card.type === 'BUY' ? 'UP' : 'DOWN'; shareData.value = { ticker: card.ticker, price: card.price, type: card.type, date: formatDate(card.trade_date), quote: `Bull or Bear? I say $${card.ticker} is going ${sentiment}. Who's with me? Cast your vote on Vibe now.` }; setTimeout(() => triggerShareCapture(`vibe-${card.ticker}.png`), 50); };
             const submitTrade = async () => { if (!tickerInput.value || !newTrade.value.price || !newTrade.value.shares || !newTrade.value.date) return alert("All fields required"); submitting.value = true; validating.value = true; let isVerified = true; let sector = null; let city = null; let country = null; const ticker = tickerInput.value.toUpperCase(); const inputPrice = parseFloat(newTrade.value.price); const inputDate = newTrade.value.date; const today = getToday(); if (FINNHUB_KEY) { try { let marketPrice = null; if (inputDate === today) { const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_KEY}`); const data = await res.json(); if (data && data.c) marketPrice = data.c; } else { const ts = Math.floor(new Date(inputDate).getTime() / 1000); const res = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${ticker}&resolution=D&from=${ts}&to=${ts + 86400}&token=${FINNHUB_KEY}`); const data = await res.json(); if (data && data.c && data.c.length > 0) marketPrice = data.c[0]; } if (marketPrice) { const diff = Math.abs(marketPrice - inputPrice) / marketPrice; if (diff > priceThreshold.value) isVerified = false; } const profRes = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${FINNHUB_KEY}`); const profData = await profRes.json(); if (profData && profData.finnhubIndustry) sector = profData.finnhubIndustry; } catch (e) { console.log("API error", e); } } try { const ipRes = await fetch('https://ipapi.co/json/'); const ipData = await ipRes.json(); if (ipData.city) city = ipData.city; if (ipData.country_code) country = ipData.country_code; } catch (e) {} validating.value = false; const { error } = await supabase.from('trades').insert([{ ticker, price: inputPrice, shares: parseFloat(newTrade.value.shares), type: newTrade.value.type, verified: isVerified, user_id: user.value.id, sector, city, country, likes: 0, dislikes: 0, trade_date: inputDate }]); if (!error) { alert(isVerified ? "Posted! ✅" : "Posted! (⚠️ Price Divergence)"); tickerInput.value = ''; newTrade.value = { price: '', shares: '', type: 'BUY', date: getToday() }; currentView.value = 'swipe'; fetchTrades(); fetchMyHistory(); } else { alert("Error: " + error.message); } submitting.value = false; };
             
-            // 🔥 SWIPE LOGIC with AD HIJACK
             const swipe = async (direction) => { 
                 if (cards.value.length === 0) return; 
                 const card = cards.value[0]; 
                 
-                // AD HIJACK
                 if (card.isAd) {
-                    window.open(TEMP_AFFILIATE_LINK, '_blank'); // 使用临时链接跳转
+                    window.open(TEMP_AFFILIATE_LINK, '_blank'); 
                     const el = document.querySelector('.trade-card'); 
                     el.classList.add(direction === 'left' ? 'swipe-left' : 'swipe-right'); 
                     setTimeout(() => { cards.value.shift(); el.classList.remove('swipe-left', 'swipe-right'); }, 300);
-                    return; // Stop here, don't save to DB
+                    return; 
                 }
 
-                // Normal Trade Swipe
                 const el = document.querySelector('.trade-card'); 
                 el.classList.add(direction === 'left' ? 'swipe-left' : 'swipe-right'); 
                 await supabase.from('swipes').insert([{ user_id: user.value.id, trade_id: card.id, direction: direction === 'right' ? 'LIKE' : 'NOPE' }]); 
@@ -525,7 +478,7 @@
             const onDrag = (e) => { if (!isDragging.value) return; currentX.value = (e.type.includes('mouse') ? e.clientX : e.touches[0].clientX) - startX.value; };
             const endDrag = () => { isDragging.value = false; if (Math.abs(currentX.value) > swipeThreshold) swipe(currentX.value > 0 ? 'right' : 'left'); else currentX.value = 0; };
             watch(currentView, (newVal) => { if (newVal === 'leaderboard') fetchLeaderboard(); if (newVal === 'swipe') fetchTrades(); if (newVal === 'profile') fetchMyHistory(); });
-            return { currentView, isAuthView, checkingSession, cards, newTrade, loading, submitting, validating, tickerInput, showSuggestions, filteredStocks, email, password, displayedCards, swipe, currentTransform, swipeStatus, startDrag, onDrag, endDrag, submitTrade, fetchTrades, filterStocks, selectStock, handleUnifiedAuth, handleLogout, leaderboardTab, topVibes, coldVibes, formatDate, user, userProfile, editingName, editUsernameInput, toggleEditName, myHistory, deleteTrade, shareLeaderboard, shareProfile, shareCard, fileInput, uploadingAvatar, triggerFileUpload, handleFileUpload, setPresetAvatar, currentAvatarUrl, getAvatar, showAvatarMenu, MALE_AVATAR, FEMALE_AVATAR, shareMode, shareData, handleGoogleLogin, calculateRatio, showPasswordChange, newPassword, changePassword, handlePasswordReset, finalizePasswordReset, showRecoveryModal };
+            return { currentView, isAuthView, checkingSession, cards, newTrade, loading, submitting, validating, tickerInput, showSuggestions, filteredStocks, email, password, displayedCards, swipe, currentTransform, swipeStatus, startDrag, onDrag, endDrag, submitTrade, fetchTrades, filterStocks, selectStock, handleUnifiedAuth, handleLogout, leaderboardTab, topVibes, coldVibes, formatDate, user, userProfile, editingName, editUsernameInput, toggleEditName, myHistory, deleteTrade, shareLeaderboard, shareProfile, shareCard, fileInput, uploadingAvatar, triggerFileUpload, handleFileUpload, setPresetAvatar, currentAvatarUrl, getAvatar, showAvatarMenu, MALE_AVATAR, FEMALE_AVATAR, shareMode, shareData, handleGoogleLogin, calculateRatio, showPasswordChange, newPassword, changePassword };
         }
     }).mount('#app');
 </script>
